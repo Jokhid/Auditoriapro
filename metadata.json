@@ -1,0 +1,6 @@
+{
+  "name": "Auditoría de Riesgos y Previsión Social",
+  "description": "Herramienta visual e interactiva para la auditoría de riesgos, planificación financiera y previsión social.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

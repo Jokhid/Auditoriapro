@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --font-serif: "Cormorant Garamond", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Base custom resets & premium layout variables based on josecarlos.hilolegal.es */
+body {
+  background-color: #fcfbf9;
+  color: #0f172a;
+}
+
+/* Custom elite radial mesh background - Gold/Navy Hilton aesthetic */
+.bg-cyber-dark {
+  background-color: #fcfbf9;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(184, 144, 71, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(15, 23, 42, 0.03) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(184, 144, 71, 0.04) 0px, transparent 50%),
+    radial-gradient(rgba(184, 144, 71, 0.02) 1px, transparent 0);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 30px 30px;
+}
+
+/* High-tech elite gold glows */
+.neon-glow-gold {
+  box-shadow: 0 10px 40px rgba(184, 144, 71, 0.08);
+}
+
+.neon-glow-gold-sm {
+  box-shadow: 0 4px 15px rgba(184, 144, 71, 0.04);
+}
+
+/* Premium micro-glass card panel - luxurious off-white */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(184, 144, 71, 0.12);
+  box-shadow: 
+    0 1px 3px 0 rgba(0, 0, 0, 0.01),
+    0 12px 45px -12px rgba(15, 23, 42, 0.04), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 1.25rem;
+}
+
+.glass-panel:hover {
+  border-color: rgba(184, 144, 71, 0.35);
+  background: #ffffff;
+  box-shadow: 
+    0 24px 60px -15px rgba(184, 144, 71, 0.08), 
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+}
+
+/* Glowing active gold border animations */
+.glow-border-active {
+  position: relative;
+}
+
+.glow-border-active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 1.25rem;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(184,144,71,0.5), rgba(15,23,42,0.05), rgba(184,144,71,0.5));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Custom interactive inputs - Gold / Slate styling */
+.cyber-input {
+  background: #ffffff;
+  border: 1px solid rgba(184, 144, 71, 0.2);
+  color: #0f172a;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 0.75rem;
+}
+
+.cyber-input:focus {
+  border-color: #b89047;
+  box-shadow: 0 0 15px rgba(184, 144, 71, 0.15);
+  background: #ffffff;
+  outline: none;
+}
+
+/* Checkbox and toggle states */
+.custom-checkbox:checked {
+  background-color: #b89047;
+  border-color: #b89047;
+}
+
+/* Custom premium scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fbfbf9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(184, 144, 71, 0.15);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b89047;
+}
+
+/* Custom pulse animations */
+@keyframes cyber-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+}
+
+.pulse-glow {
+  animation: cyber-pulse 2s infinite ease-in-out;
+}
