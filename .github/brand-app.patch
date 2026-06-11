@@ -1,0 +1,243 @@
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -65,6 +65,8 @@
+ 
+ const defaultClientData: ClientData = {
+   nombre: "Carlos Gómez",
++  telefono: "600 000 000",
++  email: "cliente@email.com",
+   edad: 38,
+   anosCotizados: 12,
+   baseCotizacion: 2800,
+@@ -343,6 +345,40 @@
+     const orangeColor = "#ff5500";
+     const darkSlateColor = "#000000";
+ 
++    const drawBrandHeader = (docInst: typeof doc, pageTitle: string) => {
++      docInst.setFillColor(26, 26, 26);
++      docInst.rect(0, 0, 210, 34, "F");
++
++      docInst.setDrawColor(255, 255, 255);
++      docInst.setLineWidth(1.5);
++      docInst.line(15, 9, 15, 25);
++      docInst.line(27, 9, 27, 25);
++      docInst.setFillColor(197, 165, 102);
++      docInst.circle(21, 17, 3.2, "F");
++
++      docInst.setTextColor(255, 255, 255);
++      docInst.setFont("Helvetica", "bold");
++      docInst.setFontSize(15);
++      docInst.text("JOSÉ CARLOS HIDALGO", 39, 14);
++
++      docInst.setFont("Helvetica", "normal");
++      docInst.setFontSize(7.5);
++      docInst.setTextColor(145, 151, 160);
++      docInst.text("GESTIÓN PATRIMONIAL E HIPOTECARIA", 39, 21);
++
++      docInst.setFont("Helvetica", "bold");
++      docInst.setFontSize(7.2);
++      docInst.setTextColor(197, 165, 102);
++      docInst.text(pageTitle, 39, 28);
++
++      docInst.setFont("Helvetica", "normal");
++      docInst.setFontSize(7.2);
++      docInst.setTextColor(255, 255, 255);
++      docInst.text("Email: josecarlos@hilolegal.es", 144, 13);
++      docInst.text("Teléfono: 647 50 60 40", 144, 20);
++      docInst.text(`Fecha: ${new Date().toLocaleDateString()}`, 144, 27);
++    };
++
+     // Helper to draw the elegant brand/technical footer on any page
+     const drawFooter = (docInst: typeof doc, pageNum: number) => {
+       docInst.setFillColor(248, 250, 252); // Soft background (slate-50)
+@@ -364,28 +400,7 @@
+       docInst.text(`Página ${pageNum}`, 188, 271, { align: "right" });
+     };
+ 
+-    // Draw Header on Page 1
+-    doc.setFillColor(15, 23, 42); // slate-900 (deep professional black-blue)
+-    doc.rect(0, 0, 210, 40, "F");
+-
+-    doc.setTextColor(255, 255, 255);
+-    doc.setFont("Helvetica", "bold");
+-    doc.setFontSize(18);
+-    doc.text("JOSÉ CARLOS HIDALGO ©", 14, 16);
+-    
+-    doc.setFont("Helvetica", "normal");
+-    doc.setFontSize(8.5);
+-    doc.setTextColor(226, 232, 240); // slate-200
+-    doc.text("Tlf: 647 50 60 40   |   Email: josecarlos@hilolegal.es   |   hilolegal.es", 14, 22);
+-    
+-    doc.setFont("Helvetica", "bold");
+-    doc.setFontSize(9.5);
+-    doc.setTextColor(249, 115, 22); // active orange
+-    doc.text("AUDITORÍA DE PREVISIÓN Y PLANIFICACIÓN FINANCIERA PERSONALIZADA", 14, 30);
+-    
+-    doc.setTextColor(148, 163, 184); // slate-400
+-    doc.setFontSize(8.5);
+-    doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 154, 16);
++    drawBrandHeader(doc, "AUDITORÍA DE PREVISIÓN Y PLANIFICACIÓN FINANCIERA PERSONALIZADA");
+ 
+     // Section 1: Resumen de Datos del Cliente
+     doc.setTextColor(15, 23, 42); // slate-900
+@@ -403,10 +418,10 @@
+     doc.setFontSize(8.5);
+     doc.setTextColor(51, 65, 85); // slate-700
+     doc.text(`Nombre del Cliente: ${formData.nombre}`, 18, 61);
+-    doc.text(`Edad actual: ${formData.edad} años (Jubilación a 67)`, 18, 67);
+-    doc.text(`Estado Civil: ${formData.estadoCivil}`, 18, 73);
+-    doc.text(`Hijos menores de 25 años: ${formData.numeroHijos}`, 18, 79);
+-    doc.text(`Plan de Ahorro Sistemático: ${(formData.ahorroSistematico || 0).toLocaleString()} €/mes`, 18, 85);
++    doc.text(`Contacto: ${formData.telefono || "No indicado"} | ${formData.email || "No indicado"}`, 18, 67);
++    doc.text(`Edad actual: ${formData.edad} años (Jubilación a 67)`, 18, 73);
++    doc.text(`Estado Civil: ${formData.estadoCivil}`, 18, 79);
++    doc.text(`Hijos menores de 25 años: ${formData.numeroHijos}`, 18, 85);
+ 
+     doc.text(`Base de Cotización S.S.: ${formData.baseCotizacion.toLocaleString()} €/mes`, 108, 61);
+     doc.text(`Salario Neto Mensual: ${formData.salarioNetoMensual.toLocaleString()} €/mes`, 108, 67);
+@@ -589,24 +604,18 @@
+     // Page 2: Security levels checklist & vulnerability meter board
+     doc.addPage();
+ 
+-    // Page 2 header
+-    doc.setFillColor(15, 23, 42);
+-    doc.rect(0, 0, 210, 20, "F");
+-    doc.setTextColor(255, 255, 255);
+-    doc.setFont("Helvetica", "bold");
+-    doc.setFontSize(11);
+-    doc.text("INFORME TÉCNICO DE SEGURIDAD PREVISIONAL Y PLAN DE ACCIÓN", 14, 13);
++    drawBrandHeader(doc, "INFORME TÉCNICO DE SEGURIDAD PREVISIONAL Y PLAN DE ACCIÓN");
+ 
+     // Section 3 Title
+     doc.setTextColor(15, 23, 42);
+     doc.setFont("Helvetica", "bold");
+     doc.setFontSize(11);
+-    doc.text("3. Niveles de Seguridad y Vulnerabilidad", 14, 28);
++    doc.text("3. Niveles de Seguridad y Vulnerabilidad", 14, 43);
+ 
+     doc.setFont("Helvetica", "normal");
+     doc.setFontSize(8.5);
+     doc.setTextColor(71, 85, 105);
+-    doc.text("Análisis técnico ponderado del blindaje patrimonial para contingencias imprevistas:", 14, 34);
++    doc.text("Análisis técnico ponderado del blindaje patrimonial para contingencias imprevistas:", 14, 49);
+ 
+     // Score descriptors lists (displaying all 6 categories matching the instructions and gauges)
+     const indexDetails = [
+@@ -619,7 +628,7 @@
+     ];
+ 
+     indexDetails.forEach((id, idx) => {
+-      const iy = 41 + idx * 5.4;
++      const iy = 56 + idx * 5.4;
+       doc.setFont("Helvetica", "bold");
+       doc.setFontSize(8);
+       doc.setTextColor(15, 23, 42);
+@@ -632,7 +641,7 @@
+     });
+ 
+     // Gráfico 2: Niveles de Seguridad (the thermometers visual panel!)
+-    const gaugeYStart = 76;
++    const gaugeYStart = 91;
+     doc.setFillColor(248, 250, 252); // slate-50 background container
+     doc.rect(14, gaugeYStart, 182, 64, "F");
+     doc.setDrawColor(226, 232, 240); // slate-200 border
+@@ -865,15 +874,9 @@
+         doc.addPage();
+         pageNum++;
+         
+-        // Secondary Header on New Page
+-        doc.setFillColor(15, 23, 42);
+-        doc.rect(0, 0, 210, 20, "F");
+-        doc.setTextColor(255, 255, 255);
+-        doc.setFont("Helvetica", "bold");
+-        doc.setFontSize(11);
+-        doc.text("PLAN DE ACCIÓN - DIAGNÓSTICO ESTRATÉGICO CONTINUACIÓN", 14, 13);
++        drawBrandHeader(doc, "PLAN DE ACCIÓN - DIAGNÓSTICO ESTRATÉGICO CONTINUACIÓN");
+         
+-        currentY = 28; // Start top of page
++        currentY = 43; // Start top of page
+       }
+ 
+       // Draw Header block
+@@ -965,14 +968,14 @@
+   };
+ 
+   return (
+-    <div className="min-h-screen text-slate-800 font-sans flex flex-col justify-between selection:bg-[#b89047] selection:text-white relative overflow-x-hidden bg-cyber-dark pb-8">
++    <div className="min-h-screen text-slate-800 font-sans flex flex-col justify-between selection:bg-[#C5A566] selection:text-white relative overflow-x-hidden bg-white pb-8">
+       {/* HEADER: Luxury Sticky Glassmorphic Nav of josecarlos.hilolegal.es */}
+-      <header className="sticky top-0 z-50 bg-[#0f172a]/95 backdrop-blur-xl border-b border-[#b89047]/20 px-4 py-4 sm:px-8 transition-all duration-300 shadow-lg text-white">
++      <header className="sticky top-0 z-50 bg-[#1A1A1A] border-b border-white/10 px-4 py-4 sm:px-8 transition-all duration-300 text-white">
+         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+           
+           <div className="flex items-center space-x-4">
+-            <a href="https://josecarlos.hilolegal.es" target="_blank" rel="noopener noreferrer" className="h-12 w-12 bg-gradient-to-br from-[#b89047] to-[#8c6d34] flex items-center justify-center rounded-xl transform hover:rotate-6 transition-all duration-300 cursor-pointer shrink-0 shadow-md">
+-              <span className="font-serif italic text-white font-black text-2xl lowercase">jh</span>
++            <a href="https://josecarlos.hilolegal.es" target="_blank" rel="noopener noreferrer" className="flex items-center transition-opacity duration-300 hover:opacity-85 cursor-pointer shrink-0">
++              <img src="/jose-carlos-hidalgo-logo.svg" alt="José Carlos Hidalgo - Gestión patrimonial e hipotecaria" className="h-14 w-auto max-w-[260px] object-contain" />
+             </a>
+             <div>
+               <div className="flex items-center gap-2">
+@@ -984,7 +987,7 @@
+                 </span>
+               </div>
+               <p className="text-[11px] sm:text-xs text-slate-400 font-sans italic font-normal mt-0.5">
+-                Asesor Financiero e Hipotecario
++                Email: josecarlos@hilolegal.es · Teléfono: 647 50 60 40
+               </p>
+             </div>
+           </div>
+@@ -1139,6 +1142,29 @@
+                     className="w-full cyber-input px-4 py-3 text-sm font-semibold"
+                     placeholder="Ej. Carlos Ramón Gómez" 
+                   />
++                </div>
++
++                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
++                  <div>
++                    <label className="block text-xs font-mono font-bold text-slate-500 mb-2 uppercase tracking-wide">Teléfono del Cliente</label>
++                    <input 
++                      type="tel" 
++                      value={formData.telefono}
++                      onChange={e => setFormData({ ...formData, telefono: e.target.value })}
++                      className="w-full cyber-input px-4 py-3 text-sm font-semibold"
++                      placeholder="Ej. 600 000 000" 
++                    />
++                  </div>
++                  <div>
++                    <label className="block text-xs font-mono font-bold text-slate-500 mb-2 uppercase tracking-wide">Email del Cliente</label>
++                    <input 
++                      type="email" 
++                      value={formData.email}
++                      onChange={e => setFormData({ ...formData, email: e.target.value })}
++                      className="w-full cyber-input px-4 py-3 text-sm font-semibold"
++                      placeholder="Ej. cliente@email.com" 
++                    />
++                  </div>
+                 </div>
+ 
+                 <div className="grid grid-cols-2 gap-4">
+@@ -2431,10 +2457,11 @@
+       </main>
+ 
+       {/* FOOTER: Premium Minimalist Black and Gold inspired by josecarlos.hilolegal.es */}
+-      <footer className="bg-[#0f172a] text-slate-350 border-t border-[#b89047]/30 px-6 py-16 sm:px-8 relative z-10 mt-20">
++      <footer className="bg-[#1A1A1A] text-white border-t border-white/10 px-6 py-16 sm:px-8 relative z-10 mt-20">
+         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 mb-12">
+           
+           <div className="md:col-span-4 space-y-4">
++            <img src="/jose-carlos-hidalgo-logo.svg" alt="José Carlos Hidalgo - Gestión patrimonial e hipotecaria" className="h-16 w-auto max-w-[320px] object-contain" />
+             <span className="font-serif font-bold text-white block tracking-tight text-2xl">
+               José Carlos <span className="text-[#b89047] font-sans font-light tracking-wide uppercase text-lg ml-1">Hidalgo</span>
+             </span>
+--- a/src/types.ts
++++ b/src/types.ts
+@@ -11,6 +11,8 @@
+ 
+ export interface ClientData {
+   nombre: string;
++  telefono: string;
++  email: string;
+   edad: number;
+   anosCotizados: number;
+   baseCotizacion: number;
