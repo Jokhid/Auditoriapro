@@ -137,7 +137,8 @@ a {
 
 button[class*="bg-gradient"],
 a[class*="bg-gradient"] {
-  background-image: linear-gradient(90deg, var(--brand-gold), var(--brand-black)) !important;
+  background-image: none !important;
+  background-color: var(--brand-gold) !important;
 }
 
 button[class*="hover"],
@@ -179,46 +180,95 @@ a[class*="hover"] {
 }
 
 header.sticky {
-  background: rgba(255, 255, 255, 0.9) !important;
-  border-bottom: 1px solid var(--brand-line) !important;
+  background: var(--brand-black) !important;
+  border-bottom: 1px solid rgb(255 255 255 / 0.1) !important;
   box-shadow: none !important;
-  color: var(--brand-black) !important;
+  color: #ffffff !important;
+  position: sticky !important;
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+}
+
+header.sticky::before {
+  content: "";
+  display: block;
+  width: min(320px, 68vw);
+  height: 68px;
+  flex: 0 0 min(320px, 68vw);
+  margin-right: 1.5rem;
+  background: url("/jose-carlos-hidalgo-logo.svg") center / contain no-repeat;
+}
+
+header.sticky::after {
+  content: "Email: josecarlos@hilolegal.es  |  Teléfono: 647 50 60 40";
+  position: absolute;
+  right: 2rem;
+  bottom: 0.8rem;
+  color: #ffffff;
+  font: 700 10px/1 "JetBrains Mono", ui-monospace, monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+header.sticky > div {
+  flex: 1 1 auto;
 }
 
 header [class*="text-slate-100"],
 header [class*="text-slate-300"],
 header [class*="text-slate-350"] {
-  color: var(--brand-black) !important;
+  color: #ffffff !important;
 }
 
 header [class*="text-slate-400"],
 header [class*="text-slate-600"] {
-  color: var(--brand-muted) !important;
+  color: rgb(255 255 255 / 0.64) !important;
 }
 
 header a[href*="josecarlos.hilolegal.es"]:first-child {
-  background: var(--brand-black) !important;
+  background: transparent !important;
   background-image: none !important;
   border-radius: 0.625rem !important;
   box-shadow: none !important;
 }
 
 header a[href*="josecarlos.hilolegal.es"]:first-child:hover {
-  background: var(--brand-gold) !important;
+  background: transparent !important;
   transform: translateY(-1px) !important;
 }
 
 header button,
 header a[href^="tel:"] {
-  border: 1px solid var(--brand-line) !important;
+  border: 1px solid rgb(255 255 255 / 0.16) !important;
   border-radius: 0.625rem !important;
   box-shadow: none !important;
+  background-image: none !important;
 }
 
 header button:hover,
 header a[href^="tel:"]:hover {
-  background: var(--brand-black) !important;
-  border-color: var(--brand-black) !important;
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  color: var(--brand-black) !important;
+}
+
+header button[class*="bg-[#b89047]"],
+header button[class*="bg-[#C5A566]"] {
+  background: var(--brand-gold) !important;
+  color: #ffffff !important;
+  border-color: var(--brand-gold) !important;
+}
+
+header img[src="/jose-carlos-hidalgo-logo.svg"],
+footer img[src="/jose-carlos-hidalgo-logo.svg"] {
+  display: block;
+  background: transparent;
+}
+
+header a,
+header span,
+header strong {
   color: #ffffff !important;
 }
 
@@ -313,6 +363,35 @@ footer {
   color: #ffffff !important;
   padding-top: 5rem !important;
   padding-bottom: 5rem !important;
+  position: relative;
+}
+
+footer::before {
+  content: "";
+  display: block;
+  width: min(360px, 80vw);
+  height: 76px;
+  margin: 0 auto 2rem;
+  background: url("/jose-carlos-hidalgo-logo.svg") center / contain no-repeat;
+}
+
+@media (max-width: 900px) {
+  header.sticky {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-bottom: 2.2rem !important;
+  }
+
+  header.sticky::before {
+    margin-right: 0;
+  }
+
+  header.sticky::after {
+    left: 1rem;
+    right: 1rem;
+    bottom: 0.75rem;
+  }
 }
 
 footer .max-w-7xl {
@@ -329,7 +408,7 @@ footer [class*="font-serif"] {
 footer p,
 footer li,
 footer span {
-  color: rgb(255 255 255 / 0.58);
+  color: #ffffff;
 }
 
 footer a {
