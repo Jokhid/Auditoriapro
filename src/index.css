@@ -1,133 +1,346 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss" source(none);
+@source "../src";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Outfit", sans-serif;
-  --font-serif: "Cormorant Garamond", serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
-/* Base custom resets & premium layout variables based on josecarlos.hilolegal.es */
+:root {
+  --brand-black: #1A1A1A;
+  --brand-gold: #C5A566;
+  --brand-paper: #FFFFFF;
+  --brand-soft: #F5F5F5;
+  --brand-line: #E5E5E5;
+  --brand-muted: #4A4A4A;
+}
+
+html,
 body {
-  background-color: #fcfbf9;
-  color: #0f172a;
+  background: var(--brand-paper);
 }
 
-/* Custom elite radial mesh background - Gold/Navy Hilton aesthetic */
+body {
+  color: var(--brand-black);
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
 .bg-cyber-dark {
-  background-color: #fcfbf9;
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(184, 144, 71, 0.05) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(15, 23, 42, 0.03) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(184, 144, 71, 0.04) 0px, transparent 50%),
-    radial-gradient(rgba(184, 144, 71, 0.02) 1px, transparent 0);
-  background-size: 100% 100%, 100% 100%, 100% 100%, 30px 30px;
+  background-color: var(--brand-paper);
+  background-image:
+    linear-gradient(90deg, rgba(26, 26, 26, 0.035) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(26, 26, 26, 0.035) 1px, transparent 1px);
+  background-size: 80px 80px;
 }
 
-/* High-tech elite gold glows */
-.neon-glow-gold {
-  box-shadow: 0 10px 40px rgba(184, 144, 71, 0.08);
-}
-
-.neon-glow-gold-sm {
-  box-shadow: 0 4px 15px rgba(184, 144, 71, 0.04);
-}
-
-/* Premium micro-glass card panel - luxurious off-white */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(184, 144, 71, 0.12);
-  box-shadow: 
-    0 1px 3px 0 rgba(0, 0, 0, 0.01),
-    0 12px 45px -12px rgba(15, 23, 42, 0.04), 
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--brand-line);
+  border-radius: 0.625rem;
+  box-shadow: 0 18px 60px rgba(26, 26, 26, 0.045);
+  transition: border-color 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-panel:hover {
-  border-color: rgba(184, 144, 71, 0.35);
-  background: #ffffff;
-  box-shadow: 
-    0 24px 60px -15px rgba(184, 144, 71, 0.08), 
-    inset 0 1px 0 rgba(255, 255, 255, 1);
-  transform: translateY(-2px);
+  border-color: var(--brand-gold);
+  box-shadow: 0 24px 70px rgba(26, 26, 26, 0.075);
+  transform: translateY(-1px);
 }
 
-/* Glowing active gold border animations */
 .glow-border-active {
   position: relative;
+  border-color: var(--brand-gold) !important;
 }
 
 .glow-border-active::after {
-  content: '';
+  content: "";
   position: absolute;
-  inset: 0;
-  border-radius: 1.25rem;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(184,144,71,0.5), rgba(15,23,42,0.05), rgba(184,144,71,0.5));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+  inset: -1px;
+  border: 1px solid rgba(197, 165, 102, 0.35);
+  border-radius: inherit;
   pointer-events: none;
 }
 
-/* Custom interactive inputs - Gold / Slate styling */
 .cyber-input {
-  background: #ffffff;
-  border: 1px solid rgba(184, 144, 71, 0.2);
-  color: #0f172a;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  border-radius: 0.75rem;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--brand-line);
+  border-radius: 0;
+  color: var(--brand-black);
+  transition: border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .cyber-input:focus {
-  border-color: #b89047;
-  box-shadow: 0 0 15px rgba(184, 144, 71, 0.15);
-  background: #ffffff;
+  background: rgba(245, 245, 245, 0.65);
+  border-color: var(--brand-gold);
+  box-shadow: none;
   outline: none;
 }
 
-/* Checkbox and toggle states */
 .custom-checkbox:checked {
-  background-color: #b89047;
-  border-color: #b89047;
+  background-color: var(--brand-gold);
+  border-color: var(--brand-gold);
 }
 
-/* Custom premium scrollbars */
+.rounded-3xl,
+.rounded-2xl,
+.rounded-xl {
+  border-radius: 0.625rem !important;
+}
+
+[class*="text-orange-"],
+[class*="text-amber-"],
+[class*="text-[#b89047]"],
+[class*="text-[#d4af37]"],
+[class*="text-[#e9c488]"] {
+  color: var(--brand-gold) !important;
+}
+
+[class*="bg-orange-"],
+[class*="bg-amber-"],
+[class*="bg-[#b89047]"],
+[class*="bg-[#8c6d34]"] {
+  background-color: var(--brand-gold) !important;
+}
+
+[class*="border-orange-"],
+[class*="border-amber-"],
+[class*="border-[#b89047]"] {
+  border-color: var(--brand-gold) !important;
+}
+
+[class*="from-orange-"],
+[class*="from-[#b89047]"] {
+  --tw-gradient-from: var(--brand-gold) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(197 165 102 / 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+[class*="via-[#8c6d34]"],
+[class*="to-[#8c6d34]"],
+[class*="to-amber-"] {
+  --tw-gradient-to: var(--brand-black) var(--tw-gradient-to-position) !important;
+}
+
+button,
+a {
+  outline-color: var(--brand-gold);
+}
+
+button[class*="bg-gradient"],
+a[class*="bg-gradient"] {
+  background-image: linear-gradient(90deg, var(--brand-gold), var(--brand-black)) !important;
+}
+
+button[class*="hover"],
+a[class*="hover"] {
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #fbfbf9;
+  background: #ffffff;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(184, 144, 71, 0.15);
-  border-radius: 10px;
+  background: #d9d9d9;
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #b89047;
+  background: var(--brand-gold);
 }
 
-/* Custom pulse animations */
 @keyframes cyber-pulse {
   0%, 100% {
     transform: scale(1);
-    opacity: 0.6;
+    opacity: 0.55;
   }
   50% {
-    transform: scale(1.12);
+    transform: scale(1.08);
     opacity: 1;
   }
 }
 
 .pulse-glow {
-  animation: cyber-pulse 2s infinite ease-in-out;
+  animation: cyber-pulse 2.4s infinite ease-in-out;
+}
+
+header.sticky {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-bottom: 1px solid var(--brand-line) !important;
+  box-shadow: none !important;
+  color: var(--brand-black) !important;
+}
+
+header [class*="text-slate-100"],
+header [class*="text-slate-300"],
+header [class*="text-slate-350"] {
+  color: var(--brand-black) !important;
+}
+
+header [class*="text-slate-400"],
+header [class*="text-slate-600"] {
+  color: var(--brand-muted) !important;
+}
+
+header a[href*="josecarlos.hilolegal.es"]:first-child {
+  background: var(--brand-black) !important;
+  background-image: none !important;
+  border-radius: 0.625rem !important;
+  box-shadow: none !important;
+}
+
+header a[href*="josecarlos.hilolegal.es"]:first-child:hover {
+  background: var(--brand-gold) !important;
+  transform: translateY(-1px) !important;
+}
+
+header button,
+header a[href^="tel:"] {
+  border: 1px solid var(--brand-line) !important;
+  border-radius: 0.625rem !important;
+  box-shadow: none !important;
+}
+
+header button:hover,
+header a[href^="tel:"]:hover {
+  background: var(--brand-black) !important;
+  border-color: var(--brand-black) !important;
+  color: #ffffff !important;
+}
+
+main {
+  max-width: 1200px !important;
+}
+
+main > section:first-of-type {
+  background: var(--brand-black) !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+  margin-top: 2rem;
+  padding: clamp(3rem, 7vw, 5.5rem) clamp(1.5rem, 4vw, 3rem) !important;
+}
+
+main > section:first-of-type > div.absolute {
+  display: none !important;
+}
+
+main > section:first-of-type h1 {
+  color: #ffffff !important;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif !important;
+  font-size: clamp(2.35rem, 6vw, 4.75rem) !important;
+  font-style: normal !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  line-height: 0.98 !important;
+  text-transform: uppercase !important;
+}
+
+main > section:first-of-type h1 span {
+  color: var(--brand-gold) !important;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif !important;
+  font-style: normal !important;
+  font-weight: 900 !important;
+}
+
+main > section:first-of-type p {
+  color: rgb(255 255 255 / 0.72) !important;
+}
+
+main > section:first-of-type [class*="inline-flex"] {
+  background: rgb(255 255 255 / 0.03) !important;
+  border-color: rgb(255 255 255 / 0.12) !important;
+  border-radius: 0 !important;
+  color: var(--brand-gold) !important;
+  letter-spacing: 0.22em !important;
+}
+
+main > section:first-of-type .grid > div {
+  background: var(--brand-black) !important;
+  border-color: rgb(255 255 255 / 0.1) !important;
+  border-radius: 0 !important;
+}
+
+main > section:first-of-type .grid > div:hover {
+  background: rgb(255 255 255 / 0.045) !important;
+}
+
+main > section:first-of-type .grid span {
+  background: transparent !important;
+  color: var(--brand-gold) !important;
+  height: auto !important;
+  width: auto !important;
+}
+
+main > section:first-of-type .grid h3 {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  text-transform: uppercase;
+}
+
+.glass-panel h2,
+.glass-panel h3,
+.glass-panel h4 {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+}
+
+.glass-panel [class*="bg-slate-50"],
+.glass-panel [class*="bg-slate-100"] {
+  background-color: #fafafa !important;
+}
+
+footer {
+  background: var(--brand-black) !important;
+  border-top: 0 !important;
+  color: #ffffff !important;
+  padding-top: 5rem !important;
+  padding-bottom: 5rem !important;
+}
+
+footer .max-w-7xl {
+  max-width: 1200px !important;
+}
+
+footer [class*="font-serif"] {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif !important;
+  font-style: normal !important;
+  font-weight: 900 !important;
+  text-transform: uppercase;
+}
+
+footer p,
+footer li,
+footer span {
+  color: rgb(255 255 255 / 0.58);
+}
+
+footer a {
+  color: var(--brand-gold) !important;
+  text-underline-offset: 4px;
+}
+
+footer a:hover {
+  color: #ffffff !important;
+}
+
+footer [class*="border-slate-800"] {
+  border-color: rgb(255 255 255 / 0.1) !important;
 }
