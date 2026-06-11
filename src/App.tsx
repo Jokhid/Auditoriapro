@@ -30,6 +30,10 @@ import {
 import {
   BarChart,
   Bar,
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -69,6 +73,9 @@ const defaultClientData: ClientData = {
   alquilerHipotecaPrestamos: 750,
   dineroBanco: 9000,
   dineroInvertido: 4000,
+  rentabilidadInversion: 5,
+  ahorroSistematico: 150,
+  rentabilidadAhorro: 6,
   preguntas: defaultQuestions,
   proyectosMedioPlazo: "Comprar un coche familiar en 3 años (18.000€)",
   objetivosLargoPlazo: "Crear un fondo de jubilación privado para compensar la pensión pública."
@@ -383,23 +390,25 @@ export default function App() {
     doc.text("1. Resumen de Datos del Cliente", 14, 50);
     
     doc.setFillColor(248, 250, 252); // slate-50 background
-    doc.rect(14, 54, 182, 34, "F");
+    doc.rect(14, 54, 182, 37, "F");
     doc.setDrawColor(226, 232, 240); // slate-200
     doc.setLineWidth(0.35);
-    doc.rect(14, 54, 182, 34, "D");
+    doc.rect(14, 54, 182, 37, "D");
 
     doc.setFont("Helvetica", "normal");
     doc.setFontSize(8.5);
     doc.setTextColor(51, 65, 85); // slate-700
     doc.text(`Nombre del Cliente: ${formData.nombre}`, 18, 61);
-    doc.text(`Edad actual: ${formData.edad} años (Jubilación a 67)`, 18, 67);
+    doc.text(`Edad actual: ${formData.edad} years (Jubilación a 67)`, 18, 67);
     doc.text(`Estado Civil: ${formData.estadoCivil}`, 18, 73);
     doc.text(`Hijos menores de 25 años: ${formData.numeroHijos}`, 18, 79);
+    doc.text(`Plan de Ahorro Sistemático: ${(formData.ahorroSistematico || 0).toLocaleString()} €/mes`, 18, 85);
 
     doc.text(`Base de Cotización S.S.: ${formData.baseCotizacion.toLocaleString()} €/mes`, 108, 61);
     doc.text(`Salario Neto Mensual: ${formData.salarioNetoMensual.toLocaleString()} €/mes`, 108, 67);
     doc.text(`Presupuesto de Gastos Totales: ${gastosTotalesMensuales.toLocaleString()} €/mes`, 108, 73);
     doc.text(`Patrimonio Líquido + Inversión: ${(formData.dineroBanco + formData.dineroInvertido).toLocaleString()} €`, 108, 79);
+    doc.text(`Rentabilidades (Inv / Ahorro): ${(formData.rentabilidadInversion ?? 5)}% / ${(formData.rentabilidadAhorro ?? 6)}% anual`, 108, 85);
 
     // Section 2: Public benefits and deficit checks
     doc.setFont("Helvetica", "bold");
@@ -1226,22 +1235,88 @@ export default function App() {
                   {/* Dinero Banco */}
                   <div>
                     <label className="block text-xs font-mono font-bold text-slate-500 mb-2 uppercase tracking-wide">Dinero en Banco</label>
-                    <input 
-                      type="number" 
-                      value={formData.dineroBanco}
-                      onChange={e => setFormData({ ...formData, dineroBanco: Number(e.target.value) })}
-                      className="w-full cyber-input px-4 py-3 text-sm font-semibold"
-                    />
+                    <div className="relative">
+                      <input 
+                        type="number" 
+                        value={formData.dineroBanco}
+                        onChange={e => setFormData({ ...formData, dineroBanco: Number(e.target.value) })}
+                        className="w-full cyber-input pl-4 pr-10 py-3 text-sm font-semibold"
+                      />
+                      <span className="absolute right-3 top-3.5 text-xs text-slate-400 font-mono">€</span>
+                    </div>
                   </div>
                   {/* Dinero Invertido */}
                   <div>
                     <label className="block text-xs font-mono font-bold text-slate-500 mb-2 uppercase tracking-wide">Capital Invertido</label>
-                    <input 
-                      type="number" 
-                      value={formData.dineroInvertido}
-                      onChange={e => setFormData({ ...formData, dineroInvertido: Number(e.target.value) })}
-                      className="w-full cyber-input px-4 py-3 text-sm font-semibold"
-                    />
+                    <div className="relative">
+                      <input 
+                        type="number" 
+                        value={formData.dineroInvertido}
+                        onChange={e => setFormData({ ...formData, dineroInvertido: Number(e.target.value) })}
+                        className="w-full cyber-input pl-4 pr-10 py-3 text-sm font-semibold"
+                      />
+                      <span className="absolute right-3 top-3.5 text-xs text-slate-400 font-mono">€</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dependent field for Rentabilidad del Capital Invertido */}
+                <AnimatePresence>
+                  {Number(formData.dineroInvertido) > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="bg-[#b89047]/5 border border-[#b89047]/15 rounded-2xl p-4 mt-1">
+                        <label className="block text-xs font-mono font-bold text-[#b89047] mb-2 uppercase tracking-wide">Rentabilidad del Capital Invertido (Anual %)</label>
+                        <div className="relative">
+                          <input 
+                            type="number" 
+                            step="0.1"
+                            value={formData.rentabilidadInversion ?? 5}
+                            onChange={e => setFormData({ ...formData, rentabilidadInversion: Number(e.target.value) })}
+                            className="w-full cyber-input pl-4 pr-12 py-3 text-sm font-semibold border-[#b89047]/30 focus:border-[#b89047]"
+                          />
+                          <span className="absolute right-4 top-3.5 text-xs text-[#b89047] font-mono font-bold">% anual</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-1.5 font-light">
+                          Indica el rendimiento neto anual estimado de tu cartera actual de inversiones.
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Planes de ahorro sistemático & Rentabilidad de Ahorro */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-mono font-bold text-slate-500 mb-2 uppercase tracking-wide">Planes de Ahorro Sistemático</label>
+                    <div className="relative">
+                      <input 
+                        type="number" 
+                        value={formData.ahorroSistematico ?? 0}
+                        onChange={e => setFormData({ ...formData, ahorroSistematico: Number(e.target.value) })}
+                        className="w-full cyber-input pl-4 pr-16 py-3 text-sm font-semibold"
+                        placeholder="Ej. 150"
+                      />
+                      <span className="absolute right-4 top-3.5 text-xs text-slate-500 font-mono font-bold">€/mes</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-mono font-bold text-slate-500 mb-2 uppercase tracking-wide">Rentabilidad de este Ahorro</label>
+                    <div className="relative">
+                      <input 
+                        type="number" 
+                        step="0.1"
+                        value={formData.rentabilidadAhorro ?? 0}
+                        onChange={e => setFormData({ ...formData, rentabilidadAhorro: Number(e.target.value) })}
+                        className="w-full cyber-input pl-4 pr-12 py-3 text-sm font-semibold"
+                        placeholder="Ej. 6"
+                      />
+                      <span className="absolute right-4 top-3.5 text-xs text-[#b89047] font-mono font-bold">% anual</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1738,64 +1813,240 @@ export default function App() {
                           Calculado estimando {anosCotizadosEstimados} años cotizados al jubilarse a los 67 años ({formData.anosCotizados} años cotizados actuales más {anosRestantes} años que le quedan hasta la jubilación). Cubrir este desfase mensual con un plan de jubilación privado te garantiza prolongar tu calidad de vida sin depender exclusivamente de las reformas del sistema público.
                         </p>
 
-                        {/* Visual 90-year lifespan previsional gap calculator block */}
-                        <div className="mt-5 p-4 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-xl relative overflow-hidden text-white shadow-lg">
-                          <div className="absolute top-0 right-0 p-3 opacity-10">
-                            <Activity className="h-10 w-10 text-orange-500 animate-pulse" />
-                          </div>
-                          
-                          <h5 className="font-mono text-[10px] font-black text-orange-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                            <Sparkles className="h-3.5 w-3.5 text-orange-500" />
-                            Simulación de Retiro Sostenible (Vida a 90 años)
-                          </h5>
-                          
-                          <p className="text-[11px] text-slate-300 font-medium leading-relaxed mb-4">
-                            Calculamos la brecha que tendrías en la jubilación, estimando una esperanza de vida de <span className="text-white font-bold">90 años</span> ({anosRetiroFinanciar} años de retiro de los 67 a los 90 años) y confrontándola con tus ingresos previstos y gastos:
-                          </p>
+                        <p className="mt-3 text-[11px] text-slate-600 font-sans leading-relaxed border-t border-slate-200/50 pt-2 font-medium">
+                          Calculado estimando {anosCotizadosEstimados} años cotizados al jubilarse a los 67 años ({formData.anosCotizados} años cotizados actuales más {anosRestantes} años que le quedan hasta la jubilación). Cubrir este desfase mensual con un plan de jubilación privado te garantiza prolongar tu calidad de vida sin depender exclusivamente de las reformas del sistema público.
+                        </p>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                            <div className="bg-white/[0.04] border border-white/[0.08] p-3 rounded-lg flex flex-col justify-between">
-                              <span className="text-[9px] text-slate-400 font-mono uppercase font-semibold">Periodo de Jubilación</span>
-                              <span className="text-xs font-mono font-extrabold text-white mt-1">23 años / 276 meses</span>
-                            </div>
-                            <div className="bg-white/[0.04] border border-white/[0.08] p-3 rounded-lg flex flex-col justify-between">
-                              <span className="text-[9px] text-slate-400 font-mono uppercase font-semibold">Brecha Mensual (Brecha)</span>
-                              <span className={`text-xs font-mono font-extrabold mt-1 ${brechaMensualJubilacion > 0 ? "text-orange-400" : "text-emerald-400"}`}>
-                                {Math.round(brechaMensualJubilacion).toLocaleString()} €/mes
-                              </span>
-                            </div>
-                            <div className="bg-white/[0.04] border border-white/[0.08] p-3 rounded-lg flex flex-col justify-between">
-                              <span className="text-[9px] text-slate-400 font-mono uppercase font-semibold">Capital de Brecha Acumulado</span>
-                              <span className={`text-xs font-mono font-extrabold mt-1 ${capitalRetiroNecesario > 0 ? "text-orange-400" : "text-emerald-400"}`}>
-                                {Math.round(capitalRetiroNecesario).toLocaleString()} €
-                              </span>
-                            </div>
-                          </div>
+                        {/* Visual 90-year lifespan previsional gap calculator & projection chart */}
+                        {(() => {
+                          const rInversion = ((formData.rentabilidadInversion !== undefined ? formData.rentabilidadInversion : 5)) / 100;
+                          const rAhorro = ((formData.rentabilidadAhorro !== undefined ? formData.rentabilidadAhorro : 6)) / 100;
+                          const ahorroMensual = formData.ahorroSistematico !== undefined ? formData.ahorroSistematico : 150;
+                          const ahorroAnual = ahorroMensual * 12;
+                          const targetCapitalObjetivo = Math.max(0, Math.round(capitalRetiroNecesario));
 
-                          {brechaMensualJubilacion > 0 ? (
-                            <div className="bg-orange-500/10 border border-orange-500/20 p-3.5 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-3">
-                              <div>
-                                <span className="text-[9px] text-orange-400 font-mono uppercase font-black block">Plazo de Acumulación Disponible</span>
-                                <p className="text-xs text-slate-300 font-medium leading-relaxed mt-0.5">
-                                  Te quedan <span className="font-bold text-white font-mono">{anosRestantesHasta67} años</span> ({anosRestantesHasta67 * 12} meses) de actividad profesional y cotización disponible para planificar.
-                                </p>
-                              </div>
-                              <div className="text-center sm:text-right shrink-0 bg-slate-900/80 border border-orange-500/20 px-3.5 py-1.5 rounded-lg">
-                                <span className="text-[9px] text-orange-400 font-mono uppercase font-black block tracking-wider">AHORRO RECOMENDADO</span>
-                                <span className="text-base font-mono font-black text-orange-400 mt-0.5 block animate-bounce-short">
-                                  {Math.round(ahorroMensualJubilacionRecomendado).toLocaleString()} €/mes
+                          const projectionData = [];
+                          // Project up to retirement, or at least 15 years to give a beautiful long-term visual trajectory
+                          const stepsToShow = Math.max(15, anosRestantes);
+                          
+                          for (let i = 0; i <= stepsToShow; i++) {
+                            const ageSimulated = formData.edad + i;
+                            const bancoVal = Number(formData.dineroBanco);
+                            const invertidoVal = Math.round(Number(formData.dineroInvertido) * Math.pow(1 + rInversion, i));
+                            
+                            let ahorroAcumuladoVal = 0;
+                            if (ahorroMensual > 0) {
+                              if (rAhorro > 0) {
+                                ahorroAcumuladoVal = Math.round(ahorroAnual * (Math.pow(1 + rAhorro, i) - 1) / rAhorro);
+                              } else {
+                                ahorroAcumuladoVal = ahorroAnual * i;
+                              }
+                            }
+                            
+                            const totalPatrimonioSimuladoVal = bancoVal + invertidoVal + ahorroAcumuladoVal;
+                            
+                            projectionData.push({
+                              edad: ageSimulated,
+                              name: `${ageSimulated} años`,
+                              "Liquidez en Banco": bancoVal,
+                              "Inversión Proyectada": invertidoVal,
+                              "Plan de Ahorro": ahorroAcumuladoVal,
+                              "Patrimonio Total": totalPatrimonioSimuladoVal,
+                              "Capital Objetivo": targetCapitalObjetivo
+                            });
+                          }
+
+                          // Find wealth at retirement age 67
+                          const indexRetirement = Math.max(0, Math.min(projectionData.length - 1, anosRestantes));
+                          const projectedDataRetirement = projectionData[indexRetirement] || projectionData[projectionData.length - 1];
+                          const patrimonioProyectadoAlRetiro = projectedDataRetirement ? projectedDataRetirement["Patrimonio Total"] : 0;
+                          const diferenciaPrevisionalTotal = patrimonioProyectadoAlRetiro - targetCapitalObjetivo;
+
+                          return (
+                            <div className="mt-8 p-6 sm:p-8 bg-gradient-to-br from-[#0f172a] via-[#152038] to-[#0f172a] border border-[#b89047]/40 rounded-3xl relative overflow-hidden text-slate-100 shadow-2xl">
+                              <div className="absolute top-0 right-0 w-96 h-96 bg-[#b89047]/5 rounded-full blur-[120px] pointer-events-none" />
+                              <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-600/5 rounded-full blur-[100px] pointer-events-none" />
+                              
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 border-b border-slate-700/50 pb-5">
+                                <div className="flex items-center gap-3">
+                                  <div className="h-10 w-10 bg-[#b89047]/15 rounded-xl border border-[#b89047]/30 flex items-center justify-center shrink-0">
+                                    <TrendingUp className="h-5 w-5 text-[#b89047]" />
+                                  </div>
+                                  <div>
+                                    <h5 className="font-serif italic text-lg sm:text-xl text-[#b89047] font-bold">
+                                      Simulación de Retiro Sostenible
+                                    </h5>
+                                    <p className="text-xs text-slate-400 font-light mt-0.5">
+                                      Modelo de capitalización vs. Brecha de la Seguridad Social (Vida a 90 años)
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <span className="bg-[#b89047]/20 text-[#e9c488] border border-[#b89047]/30 px-3 py-1 text-[10px] font-mono uppercase tracking-wider rounded-lg font-bold shrink-0">
+                                  Modelo José Carlos Hidalgo
                                 </span>
                               </div>
+
+                              {/* EXPLICACION MUY VISUAL Y ATRACTIVA */}
+                              <div className="bg-white/[0.02] border border-white/[0.05] p-5 rounded-2xl mb-6 text-sm leading-relaxed text-slate-300">
+                                <p className="mb-3 font-light text-justify">
+                                  Antes de decidir cualquier producto, hay que entender bien la exposición matemática. Este simulación confronta tu nivel de gasto familiar con la pensión pública prevista. La diferencia mensual determina el capital objetivo necesario para sostener tu vida de los <strong className="text-white font-medium">67 a los 90 años</strong> (esperanza de vida estimulada de 23 años de retiro).
+                                </p>
+                                <p className="font-light text-justify">
+                                  A continuación proyectamos cómo influye el <strong className="text-[#b89047] font-medium">interés compuesto</strong> sobre tu patrimonio total disponible: tu liquidez inicial del banco de <strong className="text-white font-medium">{(formData.dineroBanco).toLocaleString()} €</strong> se mantiene líquida para emergencias, mientras que tu inversión inicial de <strong className="text-white font-medium">{(formData.dineroInvertido).toLocaleString()} €</strong> capitaliza al <strong className="text-[#b89047] font-medium">{(formData.rentabilidadInversion !== undefined ? formData.rentabilidadInversion : 5)}% anual</strong>, sumada al crecimiento progresivo de tu plan de ahorro sistemático de <strong className="text-white font-medium">{ahorroMensual.toLocaleString()} €/mes</strong> proyectado al <strong className="text-[#b89047] font-medium">{(formData.rentabilidadAhorro !== undefined ? formData.rentabilidadAhorro : 6)}% anual</strong>.
+                                </p>
+                              </div>
+
+                              {/* STATS HIGHLIGHTS GRID */}
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                                <div className="bg-slate-900/60 border border-slate-800 p-4.5 rounded-2xl relative overflow-hidden">
+                                  <div className="absolute top-2 right-2 opacity-5 text-[#b89047]">
+                                    <PiggyBank className="h-10 w-10" />
+                                  </div>
+                                  <span className="text-[10px] text-slate-400 font-mono uppercase block mb-1">Capital Objetivo Necesario</span>
+                                  <span className="text-xl font-mono font-black text-[#e9c488] block">
+                                    {targetCapitalObjetivo.toLocaleString()} €
+                                  </span>
+                                  <span className="text-[10px] text-slate-400 block mt-1.5 font-light leading-snug">
+                                    Monto acumulado requerido para solventar tu brecha previsible de <strong className="text-white">{Math.round(brechaMensualJubilacion).toLocaleString()} €/mes</strong> durante los 23 años de jubilación.
+                                  </span>
+                                </div>
+
+                                <div className="bg-slate-900/60 border border-slate-800 p-4.5 rounded-2xl relative overflow-hidden">
+                                  <div className="absolute top-2 right-2 opacity-5 text-[#b89047]">
+                                    <TrendingUp className="h-10 w-10" />
+                                  </div>
+                                  <span className="text-[10px] text-slate-400 font-mono uppercase block mb-1">Patrimonio Proyectado (67 años)</span>
+                                  <span className="text-xl font-mono font-black text-white block">
+                                    {patrimonioProyectadoAlRetiro.toLocaleString()} €
+                                  </span>
+                                  <span className="text-[10px] text-slate-400 block mt-1.5 font-light leading-snug">
+                                    Patrimonio total acumulado a la edad de jubilación, compuesto por inversiones revalorizadas y tu plan sistemático de aportes.
+                                  </span>
+                                </div>
+
+                                <div className={`p-4.5 rounded-2xl relative overflow-hidden border ${diferenciaPrevisionalTotal >= 0 ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-100" : "bg-rose-500/5 border-rose-500/20 text-rose-100"}`}>
+                                  <span className="text-[10px] text-slate-400 font-mono uppercase block mb-1">Diagnóstico de Cobertura</span>
+                                  <span className={`text-xl font-mono font-black block ${diferenciaPrevisionalTotal >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                                    {diferenciaPrevisionalTotal >= 0 
+                                      ? `+${Math.round(diferenciaPrevisionalTotal).toLocaleString()} € Superávit` 
+                                      : `-${Math.abs(Math.round(diferenciaPrevisionalTotal)).toLocaleString()} € Déficit`
+                                    }
+                                  </span>
+                                  <span className="text-[10px] text-slate-400 block mt-1.5 font-light leading-snug">
+                                    {diferenciaPrevisionalTotal >= 0 
+                                      ? "✓ ¡Planificación Sostenible! Tus activos proyectados son suficientes para salvaguardar tu nivel de vida futuro." 
+                                      : "⚠️ Brecha Financiera. Tu patrimonio compuesto no alcanza el capital objetivo. Conviene elevar el ahorro o potenciar rentabilidad."
+                                    }
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* CHART CONTAINER */}
+                              <div className="bg-slate-950/80 border border-slate-850 p-4 sm:p-6 rounded-3xl mb-6">
+                                <h6 className="text-[11px] font-mono text-[#b89047] uppercase tracking-wider mb-4 font-bold flex items-center gap-2">
+                                  <span className="h-2 w-2 rounded-full bg-[#b89047] animate-pulse" />
+                                  Evolución Temporal del Patrimonio vs. Línea de Capital Objetivo
+                                </h6>
+                                <div className="h-[300px] w-full text-xs font-mono">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={projectionData} margin={{ top: 10, right: 10, left: -5, bottom: 0 }}>
+                                      <defs>
+                                        <linearGradient id="colorPatrimonio" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="5%" stopColor="#b89047" stopOpacity={0.4}/>
+                                          <stop offset="95%" stopColor="#b89047" stopOpacity={0.0}/>
+                                        </linearGradient>
+                                        <linearGradient id="colorAhorro" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
+                                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0}/>
+                                        </linearGradient>
+                                      </defs>
+                                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(184, 144, 71, 0.08)" />
+                                      <XAxis 
+                                        dataKey="edad" 
+                                        stroke="#94a3b8" 
+                                        fontSize={10} 
+                                        tickLine={false} 
+                                        axisLine={false}
+                                        tickFormatter={(val) => `${val} años`}
+                                      />
+                                      <YAxis 
+                                        stroke="#94a3b8" 
+                                        fontSize={10} 
+                                        tickLine={false} 
+                                        axisLine={false}
+                                        tickFormatter={(val) => `${(val / 1000).toFixed(0)} k€`}
+                                      />
+                                      <Tooltip 
+                                        contentStyle={{ 
+                                          backgroundColor: "rgba(15, 23, 42, 0.95)", 
+                                          borderColor: "rgba(184, 144, 71, 0.4)", 
+                                          color: "#ffffff", 
+                                          borderRadius: "12px",
+                                          fontSize: "11px"
+                                        }} 
+                                        formatter={(value: any) => [`${Number(value).toLocaleString()} €`]}
+                                      />
+                                      <Legend verticalAlign="top" height={36} iconType="circle" />
+                                      <Area 
+                                        type="monotone" 
+                                        name="Patrimonio Total Proyectado" 
+                                        dataKey="Patrimonio Total" 
+                                        stroke="#b89047" 
+                                        strokeWidth={2.5} 
+                                        fillOpacity={1} 
+                                        fill="url(#colorPatrimonio)" 
+                                      />
+                                      <Area 
+                                        type="monotone" 
+                                        name="Plan de Ahorro Acumulado" 
+                                        dataKey="Ahorro Sistemático" 
+                                        stroke="#3b82f6" 
+                                        strokeWidth={1} 
+                                        fillOpacity={1} 
+                                        fill="url(#colorAhorro)" 
+                                      />
+                                      <Line 
+                                        type="monotone" 
+                                        name="Línea Capital Objetivo" 
+                                        dataKey="Capital Objetivo" 
+                                        stroke="#ef4444" 
+                                        strokeDasharray="5 5" 
+                                        strokeWidth={2} 
+                                        dot={false} 
+                                      />
+                                    </AreaChart>
+                                  </ResponsiveContainer>
+                                </div>
+                              </div>
+
+                              {/* BOTTOM RECOMMENDATION NOTES */}
+                              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 text-xs mt-4">
+                                <div>
+                                  <p className="text-[10px] text-[#b89047] uppercase font-mono font-bold tracking-wide">Fórmula de Seguridad del Capital Objetivo</p>
+                                  <p className="text-slate-350 mt-1 font-light leading-snug">
+                                    Cálculo técnico: <code className="text-[#e9c488] bg-[#0f172a]/80 px-2 py-0.5 border border-[#b89047]/20 rounded font-mono font-bold">Capital Objetivo = (Gasto Mensual - Pensión pública estimada) × 12 meses × 23 años (hasta los 90 de edad)</code>
+                                  </p>
+                                </div>
+                                
+                                {brechaMensualJubilacion > 0 ? (
+                                  <div className="bg-[#b89047]/25 border border-[#b89047]/40 p-3 rounded-xl text-center sm:text-right shrink-0">
+                                    <span className="text-[9px] text-[#e9c488] font-mono uppercase font-black block tracking-wider">Ajuste de Ahorro Recomendado</span>
+                                    <span className="text-base font-mono font-bold text-white mt-0.5 block">
+                                      {Math.round(ahorroMensualJubilacionRecomendado).toLocaleString()} €/mes
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex items-center gap-1.5 shrink-0 text-emerald-400">
+                                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+                                    <span className="font-semibold text-xs text-center">¡Capital Objetivo Totalmente Cubierto!</span>
+                                  </div>
+                                )}
+                              </div>
+
                             </div>
-                          ) : (
-                            <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg">
-                              <p className="text-xs text-emerald-400 font-semibold flex items-center gap-1.5">
-                                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
-                                No registras déficit previsor bajo la tasa estimada. Tu pensión pública cubre o supera tus gastos actuales de vida familiar hasta los 90 años.
-                              </p>
-                            </div>
-                          )}
-                        </div>
+                          );
+                        })()}
                       </>
                     );
                   })()}

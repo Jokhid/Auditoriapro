@@ -20,6 +20,9 @@ export interface ClientData {
   alquilerHipotecaPrestamos: number;
   dineroBanco: number;
   dineroInvertido: number;
+  rentabilidadInversion?: number; // Rentabilidad del capital invertido (%)
+  ahorroSistematico?: number;     // Planes de ahorro sistemático (€/mes)
+  rentabilidadAhorro?: number;    // Rentabilidad del ahorro sistemático (%)
   preguntas: AuditQuestions;
   proyectosMedioPlazo: string;
   objetivosLargoPlazo: string;
