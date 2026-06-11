@@ -244,6 +244,73 @@ export default function App() {
   // Projects calculations to reach goals
   const totalMensualProyectos = proyectos.reduce((sum, p) => sum + (p.coste / (p.plazoAnos * 12)), 0);
 
+  const strategicDiagnostics = [
+    {
+      area: "Baja laboral e incapacidad temporal",
+      severity: deficitIt > 600 ? "grave" : deficitIt > 0 ? "moderada" : "leve",
+      issue: deficitIt > 0
+        ? `Existe una brecha mensual estimada de ${Math.round(deficitIt).toLocaleString()} EUR frente a los gastos familiares.`
+        : "La prestación estimada cubre el nivel actual de gasto mensual.",
+      action: deficitIt > 0
+        ? "Contratar o revisar un subsidio privado por baja laboral que cubra la diferencia entre prestación pública y gasto real."
+        : "Mantener la cobertura actual y revisar importes una vez al año."
+    },
+    {
+      area: "Invalidez y protección profesional",
+      severity: deficitIpt > 600 ? "grave" : deficitIpt > 0 ? "moderada" : "leve",
+      issue: deficitIpt > 0
+        ? `La invalidez profesional dejaría un déficit mensual de ${Math.round(deficitIpt).toLocaleString()} EUR.`
+        : "La cobertura proyectada ante invalidez profesional no muestra déficit frente al gasto actual.",
+      action: deficitIpt > 0
+        ? "Ajustar capitales de invalidez y amortización de deudas para asegurar vivienda, préstamos y gastos familiares."
+        : "Conservar el nivel de protección y actualizarlo si cambian ingresos o deuda."
+    },
+    {
+      area: "Protección familiar por fallecimiento",
+      severity: (deficitViudedad > 600 || deficitOrfandad > 600) ? "grave" : (deficitViudedad > 0 || deficitOrfandad > 0) ? "moderada" : "leve",
+      issue: (deficitViudedad > 0 || deficitOrfandad > 0)
+        ? `La familia presenta una brecha potencial de hasta ${Math.round(Math.max(deficitViudedad, deficitOrfandad, 0)).toLocaleString()} EUR/mes.`
+        : "La cobertura familiar estimada no presenta brecha mensual relevante.",
+      action: (deficitViudedad > 0 || deficitOrfandad > 0)
+        ? "Definir un capital de vida temporal suficiente para cubrir impuestos, vivienda, estudios y transición de ingresos."
+        : "Mantener beneficiarios, capitales y testamento revisados."
+    },
+    {
+      area: "Fondo de emergencia y liquidez",
+      severity: scoreFondoEmergencia <= 3 ? "grave" : scoreFondoEmergencia <= 6 ? "moderada" : "leve",
+      issue: `El fondo disponible cubre aproximadamente ${mesesFondoEmergencia.toFixed(1)} meses de gastos.`,
+      action: scoreFondoEmergencia < 8
+        ? "Construir una reserva líquida de 6 a 9 meses de gastos antes de asumir nuevos compromisos de inversión."
+        : "Separar la reserva de emergencia del capital destinado a inversión."
+    },
+    {
+      area: "Jubilación e inflación",
+      severity: (deficitJubilacion > 600 || scoreEnemigoInflacion <= 3) ? "grave" : (deficitJubilacion > 0 || scoreEnemigoInflacion <= 6) ? "moderada" : "leve",
+      issue: deficitJubilacion > 0
+        ? `La jubilación proyectada deja una brecha mensual de ${Math.round(deficitJubilacion).toLocaleString()} EUR.`
+        : "La pensión estimada no deja brecha mensual frente al gasto actual.",
+      action: "Aumentar ahorro sistemático, diversificar capital improductivo y revisar rentabilidad neta después de impuestos."
+    },
+    {
+      area: "Protección legal y protocolo familiar",
+      severity: scoreProteccionLegal <= 3 ? "grave" : scoreProteccionLegal <= 6 ? "moderada" : "leve",
+      issue: scoreProteccionLegal < 8
+        ? "Hay margen de mejora en testamento, acceso familiar a información crítica o instrucciones de actuación."
+        : "La protección legal declarada es adecuada.",
+      action: scoreProteccionLegal < 8
+        ? "Formalizar testamento, inventario patrimonial y protocolo de acceso familiar a documentación clave."
+        : "Revisar el protocolo legal cuando haya cambios familiares o patrimoniales."
+    }
+  ];
+
+  const severityClasses = {
+    grave: "bg-red-50 text-red-700 border-red-200",
+    moderada: "bg-orange-50 text-orange-700 border-orange-200",
+    leve: "bg-emerald-50 text-emerald-700 border-emerald-200"
+  } as const;
+
+  const strategicSummary = `La auditoría refleja una seguridad global de ${averageVulnerabilityScore}/10. Los puntos críticos se concentran en las brechas entre prestaciones públicas y gastos reales, la suficiencia del fondo de emergencia, la protección familiar y la preparación de jubilación.`;
+
   const addProyecto = () => {
     if (!nuevoProyectoNombre.trim()) return;
     const item: ProyectoItem = {
@@ -884,12 +951,12 @@ export default function App() {
       doc.setFontSize(9.5);
       
       if (isAIPriority) {
-        if (priorityLevel === "Alta") {
+        if (priorityLevel === "Alta" || priorityLevel === "grave") {
           doc.setTextColor(220, 38, 38); // red
-        } else if (priorityLevel === "Media") {
+        } else if (priorityLevel === "Media" || priorityLevel === "moderada") {
           doc.setTextColor(217, 119, 6); // amber
         } else {
-          doc.setTextColor(14, 165, 233); // sky/blue
+          doc.setTextColor(22, 163, 74); // green
         }
       } else {
         doc.setTextColor(15, 23, 42); // deep slate
@@ -919,9 +986,20 @@ export default function App() {
     doc.setFontSize(11);
     doc.text("4. Diagnóstico Estratégico y Plan de Acción", 14, 191);
 
+    printParagraph("Resumen integral de la auditoría", strategicSummary);
+
+    strategicDiagnostics.forEach((item, idx) => {
+      printParagraph(
+        `${idx + 1}. Deficiencia ${item.severity.toUpperCase()} - ${item.area}`,
+        `Diagnóstico: ${item.issue}\nMedida a adoptar: ${item.action}`,
+        true,
+        item.severity
+      );
+    });
+
     if (aiReport) {
       // Summary Executive
-      printParagraph("Resumen Diagnóstico Ejecutivo", aiReport.summary);
+      printParagraph("Complemento de diagnóstico IA", aiReport.summary);
       
       // Proteccion SS details
       printParagraph("Auditoría de Protección S.S.: Baja Laboral", aiReport.riskAuditAdvice.incapacidadTemporal);
@@ -977,16 +1055,8 @@ export default function App() {
             <a href="https://josecarlos.hilolegal.es" target="_blank" rel="noopener noreferrer" className="flex items-center transition-opacity duration-300 hover:opacity-85 cursor-pointer shrink-0">
               <img src="/jose-carlos-hidalgo-logo.svg" alt="José Carlos Hidalgo - Gestión patrimonial e hipotecaria" className="h-14 w-auto max-w-[260px] object-contain" />
             </a>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-serif font-black tracking-tight text-xl sm:text-2xl text-slate-100 block leading-tight">
-                  José Carlos <span className="text-[#b89047] font-sans font-light tracking-wide uppercase text-sm sm:text-base ml-1">Hidalgo</span>
-                </span>
-                <span className="hidden sm:inline-block bg-[#b89047]/25 text-xs text-[#d4af37] border border-[#b89047]/30 px-2 py-0.5 rounded font-mono font-medium tracking-wider">
-                  HILO LEGAL
-                </span>
-              </div>
-              <p className="text-[11px] sm:text-xs text-slate-400 font-sans italic font-normal mt-0.5">
+            <div className="hidden sm:block">
+              <p className="text-[11px] sm:text-xs text-white font-mono font-bold uppercase tracking-wider">
                 Email: josecarlos@hilolegal.es · Teléfono: 647 50 60 40
               </p>
             </div>
@@ -2406,6 +2476,43 @@ export default function App() {
                 </div>
               </div>
 
+              {/* BLOQUE 4: DIAGNÓSTICO ESTRATÉGICO Y PLAN DE ACCIÓN */}
+              <div className="mt-8 pt-6 border-t border-slate-200">
+                <div className="flex items-center space-x-3 mb-5">
+                  <CheckCircle2 className="h-6 w-6 text-orange-600 shrink-0" />
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-serif font-bold text-slate-900 tracking-tight">
+                      4. Diagnóstico estratégico y plan de acción
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-1 font-semibold">
+                      Resumen ejecutivo de deficiencias detectadas y medidas recomendadas
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-4">
+                  <p className="text-sm text-slate-700 leading-relaxed font-medium">{strategicSummary}</p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {strategicDiagnostics.map((item, index) => (
+                    <div key={item.area} className={`border rounded-2xl p-4 ${severityClasses[item.severity as keyof typeof severityClasses]}`}>
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <h3 className="text-sm font-black text-slate-900">{index + 1}. {item.area}</h3>
+                        <span className="text-[10px] font-mono uppercase font-black border rounded-lg px-2 py-1 bg-white/70">
+                          {item.severity}
+                        </span>
+                      </div>
+                      <p className="text-xs leading-relaxed font-semibold mb-3">{item.issue}</p>
+                      <div className="bg-white/75 border border-white/80 rounded-xl p-3">
+                        <span className="text-[10px] uppercase font-black font-mono block mb-1">Plan de acción</span>
+                        <p className="text-xs leading-relaxed font-medium">{item.action}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* ACTION PLAN STEPS */}
               {aiReport && (
                 <div className="mb-8 pt-6 border-t border-slate-200">
@@ -2461,13 +2568,6 @@ export default function App() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 mb-12">
           
           <div className="md:col-span-4 space-y-4">
-            <img src="/jose-carlos-hidalgo-logo.svg" alt="José Carlos Hidalgo - Gestión patrimonial e hipotecaria" className="h-16 w-auto max-w-[320px] object-contain" />
-            <span className="font-serif font-bold text-white block tracking-tight text-2xl">
-              José Carlos <span className="text-[#b89047] font-sans font-light tracking-wide uppercase text-lg ml-1">Hidalgo</span>
-            </span>
-            <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
-              Asesor Financiero e Hipotecario. Te ayudo a proteger tus ingresos, tu familia y tu futuro financiero sin depender de la intuición. Red de planificación coordinada en <a href="https://hilolegal.es" target="_blank" rel="noopener noreferrer" className="text-[#b89047] hover:text-[#d4af37] underline font-bold transition-colors">hilolegal.es</a>.
-            </p>
             <div className="flex flex-col gap-1.5 text-[11px] text-slate-400 font-sans pt-2">
               <p className="flex items-center gap-1.5">
                 <span className="text-[#b89047]">📍</span> Altea • Benidorm • Alicante, España
