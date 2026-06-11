@@ -5,7 +5,8 @@ export interface AuditQuestions {
   p04: string; // Motor de la economía
   p05: string; // Jubilación
   p06: string; // Guerra contra la Inflación
-  p07: string; // Eficiencia Fiscal
+  p07: string; // Testamento (Protección legal)
+  p08: string; // Acceso familiar (Protección legal)
 }
 
 export interface ClientData {

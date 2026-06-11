@@ -45,7 +45,8 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
-  Cell
+  Cell,
+  ReferenceLine
 } from "recharts";
 import { jsPDF } from "jspdf";
 import { ClientData, PrestacionesCalculadas, AIAnalysisResult, AuditQuestions } from "./types";
@@ -58,7 +59,8 @@ const defaultQuestions: AuditQuestions = {
   p04: "Sí",
   p05: "No",
   p06: "No",
-  p07: "No"
+  p07: "No",
+  p08: "No"
 };
 
 const defaultClientData: ClientData = {
@@ -202,11 +204,13 @@ export default function App() {
   const scoreEnemigoInflacion = formData.preguntas.p06 === "Sí" ? 10 
     : formData.preguntas.p06 === "No" && Number(formData.dineroBanco) > 6000 ? 2 : 5;
 
-  const scoreEficienciaFiscal = formData.preguntas.p07 === "Sí" ? 10 : 2;
+  const scoreProteccionLegal = 
+    (formData.preguntas.p07 === "Sí" ? 5 : 1) + 
+    (formData.preguntas.p08 === "Sí" ? 5 : 1);
 
   // Average Vulnerability score (High vulnerability if score is low, low vulnerability if score is high)
   const averageVulnerabilityScore = Math.round(
-    (scoreFondoEmergencia + scoreBajaLaboral + scoreViudedadOrfandad + scoreAccesoSanitario + scoreEnemigoInflacion + scoreEficienciaFiscal) / 6
+    (scoreFondoEmergencia + scoreBajaLaboral + scoreViudedadOrfandad + scoreAccesoSanitario + scoreEnemigoInflacion + scoreProteccionLegal) / 6
   );
 
   // Recharts Chart Data
@@ -232,7 +236,7 @@ export default function App() {
     { subject: "Seguro Familiar", A: scoreViudedadOrfandad * 10, fullMark: 100 },
     { subject: "Acceso Sanitario", A: scoreAccesoSanitario * 10, fullMark: 100 },
     { subject: "Control Inflación", A: scoreEnemigoInflacion * 10, fullMark: 100 },
-    { subject: "Eficiencia Fiscal", A: scoreEficienciaFiscal * 10, fullMark: 100 },
+    { subject: "Protección legal", A: scoreProteccionLegal * 10, fullMark: 100 },
   ];
 
   // Projects calculations to reach goals
@@ -399,7 +403,7 @@ export default function App() {
     doc.setFontSize(8.5);
     doc.setTextColor(51, 65, 85); // slate-700
     doc.text(`Nombre del Cliente: ${formData.nombre}`, 18, 61);
-    doc.text(`Edad actual: ${formData.edad} years (Jubilación a 67)`, 18, 67);
+    doc.text(`Edad actual: ${formData.edad} años (Jubilación a 67)`, 18, 67);
     doc.text(`Estado Civil: ${formData.estadoCivil}`, 18, 73);
     doc.text(`Hijos menores de 25 años: ${formData.numeroHijos}`, 18, 79);
     doc.text(`Plan de Ahorro Sistemático: ${(formData.ahorroSistematico || 0).toLocaleString()} €/mes`, 18, 85);
@@ -611,7 +615,7 @@ export default function App() {
       { title: "3. Protección por Fallecimiento", desc: "Suficiencia de capitales y pensiones de viudedad/orfandad para protección familiar." },
       { title: "4. Cobertura Sanitaria", desc: "Seguridad y velocidad de acceso a la medicina privada frente a listas de espera." },
       { title: "5. Batir la Inflación", desc: "Optimización de rendimientos contra la devaluación acumulada del capital rentable." },
-      { title: "6. Eficiencia Fiscal de Previsión", desc: "Aprovechamiento de desgravaciones directas en Renta para instrumentar ahorro." }
+      { title: "6. Protección legal", desc: "Planificación de testamento notarial, adaptabilidad actual y protocolo de actuación familiar." }
     ];
 
     indexDetails.forEach((id, idx) => {
@@ -647,7 +651,7 @@ export default function App() {
       { label: "3. Seguro Familiar", score: scoreViudedadOrfandad },
       { label: "4. Acceso Sanitario", score: scoreAccesoSanitario },
       { label: "5. Batir Inflación", score: scoreEnemigoInflacion },
-      { label: "6. Eficiencia Fiscal", score: scoreEficienciaFiscal }
+      { label: "6. Protección legal", score: scoreProteccionLegal }
     ];
 
     // --- INTEGRACIÓN DE GRÁFICO RADIAL (RADAR) EN PDF (Sección 3: Izquierda) ---
@@ -786,19 +790,52 @@ export default function App() {
     const textRetiroInfo = `Considerando una esperanza de vida de 90 años, financiando un retiro de 23 años (276 meses) tras jubilarse a los 67 años:`;
     doc.text(textRetiroInfo, 19, retirementBoxY + 11.5);
 
+    // Calculate compound projection at retirement for the PDF report
+    const rInversionPdf = ((formData.rentabilidadInversion !== undefined ? formData.rentabilidadInversion : 5)) / 100;
+    const rAhorroPdf = ((formData.rentabilidadAhorro !== undefined ? formData.rentabilidadAhorro : 6)) / 100;
+    const ahorroMensualPdf = formData.ahorroSistematico !== undefined ? formData.ahorroSistematico : 150;
+    const ahorroAnualPdf = ahorroMensualPdf * 12;
+    const targetCapitalObjetivoPdf = Math.max(0, Math.round(capitalRetiroNecesario));
+
+    const pdfBancoVal = Number(formData.dineroBanco);
+    const pdfInvertidoVal = Math.round(Number(formData.dineroInvertido) * Math.pow(1 + rInversionPdf, anosRestantesHasta67));
+
+    let pdfAhorroAcumuladoVal = 0;
+    if (ahorroMensualPdf > 0) {
+      if (rAhorroPdf > 0) {
+        pdfAhorroAcumuladoVal = Math.round(ahorroAnualPdf * (Math.pow(1 + rAhorroPdf, anosRestantesHasta67) - 1) / rAhorroPdf);
+      } else {
+        pdfAhorroAcumuladoVal = ahorroAnualPdf * anosRestantesHasta67;
+      }
+    }
+
+    const pdfPatrimonioTotalProyectado = pdfBancoVal + pdfInvertidoVal + pdfAhorroAcumuladoVal;
+    const pdfDiferenciaAlRetiro = pdfPatrimonioTotalProyectado - targetCapitalObjetivoPdf;
+
+    let pdfAjusteAhorroRecomendado = 0;
+    if (pdfDiferenciaAlRetiro < 0 && anosRestantesHasta67 > 0) {
+      const deficit = Math.abs(pdfDiferenciaAlRetiro);
+      if (rAhorroPdf > 0) {
+        pdfAjusteAhorroRecomendado = deficit * rAhorroPdf / (12 * (Math.pow(1 + rAhorroPdf, anosRestantesHasta67) - 1));
+      } else {
+        pdfAjusteAhorroRecomendado = deficit / (anosRestantesHasta67 * 12);
+      }
+    }
+
     // Grid data
     doc.setFont("Helvetica", "bold");
     doc.setFontSize(7.5);
-    doc.text(`- Deficit mensual S.S.: ${Math.round(brechaMensualJubilacion).toLocaleString()} EUR/mes`, 19, retirementBoxY + 17.5);
+    doc.setTextColor(241, 245, 249);
+    doc.text(`- Déficit mensual S.S.: ${Math.round(brechaMensualJubilacion).toLocaleString()} EUR/mes`, 19, retirementBoxY + 17.5);
     doc.text(`- Capital total previsor requerido: ${Math.round(capitalRetiroNecesario).toLocaleString()} EUR`, 108, retirementBoxY + 17.5);
 
-    if (brechaMensualJubilacion > 0) {
-      doc.setTextColor(253, 186, 116); // light orange
-      doc.text(`- Anos para acumular: ${anosRestantesHasta67} anos (${anosRestantesHasta67 * 12} meses)`, 19, retirementBoxY + 23);
-      doc.text(`- Esfuerzo Mensual Recomendado: ${Math.round(ahorroMensualJubilacionRecomendado).toLocaleString()} EUR/mes`, 108, retirementBoxY + 23);
+    if (pdfDiferenciaAlRetiro >= 0) {
+      doc.setTextColor(52, 211, 153); // Emerald/Green-400 light-medium
+      doc.text("- ¡OBJETIVO ALCANZADO! Tu patrimonio de jubilación proyectado cubre plenamente el capital objetivo.", 19, retirementBoxY + 23);
     } else {
-      doc.setTextColor(16, 185, 129); // Safe emerald
-      doc.text("- [OK] No se registra brecha previsional bajo el nivel actual. Pension suficiente de los 67 a los 90 anos.", 19, retirementBoxY + 23);
+      doc.setTextColor(253, 186, 116); // light orange
+      doc.text(`- Años para acumular: ${anosRestantesHasta67} años (${anosRestantesHasta67 * 12} meses)`, 19, retirementBoxY + 23);
+      doc.text(`- Esfuerzo Mensual Recomendado: ${Math.round(pdfAjusteAhorroRecomendado).toLocaleString()} EUR/mes`, 108, retirementBoxY + 23);
     }
 
     // Flowing Section 4: Diagnóstico Estratégico y Plan de Acción
@@ -1457,11 +1494,11 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* P07: Eficiencia Fiscal */}
+                  {/* P07: Testamento */}
                   <div className="bg-slate-50 p-5 border border-slate-200/60 rounded-2xl hover:border-[#b89047]/30 transition-all duration-300">
-                    <p className="text-xs sm:text-sm text-slate-800 font-bold mb-3 leading-relaxed">07. ¿Aprovechas en tu IRPF los límites normativos (1.500€ o 5.750€ si eres autónomo) por aportaciones a sistemas de previsión social?</p>
+                    <p className="text-xs sm:text-sm text-slate-800 font-bold mb-3 leading-relaxed">07. ¿Tienes hecho testamento ante notario y revisado en los últimos 5 años para adaptarlo a tu situación actual?</p>
                     <div className="flex gap-2">
-                      {["Sí", "No", "No declaro"].map(opt => (
+                      {["Sí", "No", "No lo sé"].map(opt => (
                         <button
                           key={opt}
                           type="button"
@@ -1470,6 +1507,26 @@ export default function App() {
                             preguntas: { ...formData.preguntas, p07: opt }
                           })}
                           className={`flex-1 py-2 border rounded-xl text-xs font-mono uppercase transition-all duration-200 cursor-pointer ${formData.preguntas.p07 === opt ? "bg-gradient-to-r from-[#b89047] to-[#8c6d34] text-white border-transparent shadow-[0_4px_12px_rgba(184,144,71,0.25)] font-bold scale-[1.02]" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* P08: Acceso familiar a documentación */}
+                  <div className="bg-slate-50 p-5 border border-slate-200/60 rounded-2xl hover:border-[#b89047]/30 transition-all duration-300 mt-4">
+                    <p className="text-xs sm:text-sm text-slate-800 font-bold mb-3 leading-relaxed">08. ¿Tu familia sabría exactamente qué hacer, en caso de incapacidad o fallecimiento y tiene acceso a documentación clave?</p>
+                    <div className="flex gap-2">
+                      {["Sí", "No", "No lo sé"].map(opt => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => setFormData({
+                            ...formData,
+                            preguntas: { ...formData.preguntas, p08: opt }
+                          })}
+                          className={`flex-1 py-2 border rounded-xl text-xs font-mono uppercase transition-all duration-200 cursor-pointer ${formData.preguntas.p08 === opt ? "bg-gradient-to-r from-[#b89047] to-[#8c6d34] text-white border-transparent shadow-[0_4px_12px_rgba(184,144,71,0.25)] font-bold scale-[1.02]" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}
                         >
                           {opt}
                         </button>
@@ -1524,65 +1581,6 @@ export default function App() {
           {/* TAB 2: AUDIT RESULTS DASHBOARD (RIGHT / MAIN) */}
           <div className={`md:col-span-12 lg:col-span-7 space-y-8 ${activeTab === "results" ? "block" : "hidden md:block"}`}>
             
-            {/* AI GEMINI CORNER SUMMARY */}
-            <div className="glass-panel p-6 sm:p-8 relative overflow-hidden bg-gradient-to-br from-[#b89047]/5 to-[#8c6d34]/5 border border-[#b89047]/20 shadow-md">
-              <div className="absolute top-0 right-0 p-4">
-                <Sparkles className="h-5 w-5 text-[#b89047] animate-pulse" />
-              </div>
-
-              <div className="flex items-center gap-3 mb-4">
-                <span className="p-2 bg-[#b89047]/15 border border-[#b89047]/30 text-[#b89047] rounded-xl">
-                  <Sparkle className="h-5 w-5" />
-                </span>
-                <h3 className="font-mono uppercase font-black text-slate-900 text-xs sm:text-sm tracking-wider">
-                  Consultoría Avanzada con IA Gemini
-                </h3>
-              </div>
-
-              {isConsultingAI ? (
-                <div className="space-y-3 py-4">
-                  <div className="h-2 w-full bg-slate-100 border border-slate-200 overflow-hidden rounded-full font-bold">
-                    <div className="bg-gradient-to-r from-[#b89047] to-[#e5c9a3] h-full w-[45%] animate-pulse rounded-full" />
-                  </div>
-                  <p className="text-xs text-slate-500 font-mono italic uppercase">
-                    Conectando con el motor analítico de previsión social...
-                  </p>
-                </div>
-              ) : aiReport ? (
-                <div className="space-y-4">
-                  <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-sans font-medium text-justify">
-                    {aiReport.summary}
-                  </p>
-                  
-                  {/* Global action actions */}
-                  <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl flex flex-col sm:flex-row gap-3 items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      <Lock className="h-4 w-4 text-[#b89047] shrink-0" />
-                      <span className="text-slate-500 font-mono uppercase text-[10px]">Informe consolidado por IA con API de servidor</span>
-                    </div>
-                    <button 
-                      onClick={triggerAIAudit}
-                      className="text-[#b89047] hover:text-[#8c6d34] font-bold cursor-pointer uppercase font-mono text-[10px] transition-colors"
-                    >
-                      Volver a Generar
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <p className="text-xs sm:text-sm text-slate-600 font-medium">
-                    Calculando el desfase previsible de pensiones... El servidor ya está disponible para ofrecerte consejos a medida conectando con Hacienda, la Seguridad Social simulada y la IA.
-                  </p>
-                  <button
-                    onClick={triggerAIAudit}
-                    className="bg-gradient-to-r from-[#b89047] to-[#8c6d34] hover:from-[#c5a880] hover:to-[#b89047] text-white border-0 font-mono uppercase font-bold px-4 py-3 text-xs transition-colors flex items-center gap-2 cursor-pointer shadow-md rounded-xl"
-                  >
-                    <Sparkles className="h-4 w-4" /> Generar Consejos de Previsión con IA
-                  </button>
-                </div>
-              )}
-            </div>
-
             {/* BLOQUE 1: PREVISIÓN SOCIAL (Calculated benefits dashboard vs costs) */}
             <div className="glass-panel p-6 sm:p-8 relative overflow-hidden bg-white border border-slate-200/85 shadow-md">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-6 mb-6 gap-4">
@@ -1614,6 +1612,18 @@ export default function App() {
                       contentStyle={{ backgroundColor: "#ffffff", border: "1px solid rgba(249, 115, 22, 0.25)", borderRadius: "12px", boxShadow: "0 10px 30px rgba(15, 23, 42, 0.08)" }}
                       labelStyle={{ color: "#0f172a", fontWeight: "bold" }}
                       itemStyle={{ color: "#ea580c" }}
+                    />
+                    <ReferenceLine 
+                      y={gastosTotalesMensuales} 
+                      stroke="#ef4444" 
+                      strokeWidth={2} 
+                      strokeDasharray="4 4" 
+                      label={{ 
+                        value: "Gasto mensual requerido", 
+                        fill: "#ef4444", 
+                        position: "top", 
+                        style: { fontSize: "10px", fontWeight: "bold", fontFamily: "monospace" } 
+                      }} 
                     />
                     <Bar dataKey="Importe" radius={[6, 6, 0, 0]}>
                       {chartData.map((entry, index) => (
@@ -1862,6 +1872,16 @@ export default function App() {
                           const patrimonioProyectadoAlRetiro = projectedDataRetirement ? projectedDataRetirement["Patrimonio Total"] : 0;
                           const diferenciaPrevisionalTotal = patrimonioProyectadoAlRetiro - targetCapitalObjetivo;
 
+                          let ajusteAhorroRecomendado = 0;
+                          if (diferenciaPrevisionalTotal < 0 && anosRestantes > 0) {
+                            const deficit = Math.abs(diferenciaPrevisionalTotal);
+                            if (rAhorro > 0) {
+                              ajusteAhorroRecomendado = deficit * rAhorro / (12 * (Math.pow(1 + rAhorro, anosRestantes) - 1));
+                            } else {
+                              ajusteAhorroRecomendado = deficit / (anosRestantes * 12);
+                            }
+                          }
+
                           return (
                             <div className="mt-8 p-6 sm:p-8 bg-gradient-to-br from-[#0f172a] via-[#152038] to-[#0f172a] border border-[#b89047]/40 rounded-3xl relative overflow-hidden text-slate-100 shadow-2xl">
                               <div className="absolute top-0 right-0 w-96 h-96 bg-[#b89047]/5 rounded-full blur-[120px] pointer-events-none" />
@@ -2029,17 +2049,17 @@ export default function App() {
                                   </p>
                                 </div>
                                 
-                                {brechaMensualJubilacion > 0 ? (
+                                {diferenciaPrevisionalTotal >= 0 ? (
+                                  <div className="bg-emerald-500/15 border border-emerald-500/30 px-3 py-1.5 rounded-xl flex items-center gap-1.5 shrink-0 text-emerald-400">
+                                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+                                    <span className="font-bold text-xs uppercase text-emerald-400 font-mono tracking-wide">¡OBJETIVO ALCANZADO!</span>
+                                  </div>
+                                ) : (
                                   <div className="bg-[#b89047]/25 border border-[#b89047]/40 p-3 rounded-xl text-center sm:text-right shrink-0">
                                     <span className="text-[9px] text-[#e9c488] font-mono uppercase font-black block tracking-wider">Ajuste de Ahorro Recomendado</span>
                                     <span className="text-base font-mono font-bold text-white mt-0.5 block">
-                                      {Math.round(ahorroMensualJubilacionRecomendado).toLocaleString()} €/mes
+                                      {Math.round(ajusteAhorroRecomendado).toLocaleString()} €/mes
                                     </span>
-                                  </div>
-                                ) : (
-                                  <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex items-center gap-1.5 shrink-0 text-emerald-400">
-                                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
-                                    <span className="font-semibold text-xs text-center">¡Capital Objetivo Totalmente Cubierto!</span>
                                   </div>
                                 )}
                               </div>
@@ -2130,11 +2150,34 @@ export default function App() {
                     const ahorroReq = Math.round(p.coste / (p.plazoAnos * 12));
                     return (
                       <div key={p.id} className="bg-white border border-slate-200 p-3.5 rounded-xl flex justify-between items-center text-xs shadow-sm">
-                        <div>
-                          <span className="font-bold text-slate-900 block">{p.nombre}</span>
-                          <span className="text-[10px] text-slate-500 font-semibold uppercase">Objetivo: {p.coste.toLocaleString()}€ • Plazo: {p.plazoAnos} años</span>
+                        <div className="flex-1 mr-4">
+                          <span className="font-bold text-slate-900 block mb-1">{p.nombre}</span>
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                            <span className="text-[10px] text-slate-400 font-bold uppercase shrink-0">Importe:</span>
+                            <input 
+                              type="number" 
+                              value={p.coste}
+                              onChange={e => {
+                                const nuevoCoste = Math.max(0, Number(e.target.value));
+                                setProyectos(proyectos.map(item => item.id === p.id ? { ...item, coste: nuevoCoste } : item));
+                              }}
+                              className="w-20 px-1.5 py-0.5 text-[10px] font-mono font-bold bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none focus:border-orange-500"
+                            />
+                            <span className="text-[10px] text-slate-500 font-bold">€</span>
+                            <span className="text-[10px] text-slate-400 font-bold pl-1 uppercase shrink-0">Plazo:</span>
+                            <input 
+                              type="number" 
+                              value={p.plazoAnos}
+                              onChange={e => {
+                                const nuevoPlazo = Math.max(1, Number(e.target.value));
+                                setProyectos(proyectos.map(item => item.id === p.id ? { ...item, plazoAnos: nuevoPlazo } : item));
+                              }}
+                              className="w-12 px-1.5 py-0.5 text-[10px] font-mono font-bold bg-slate-50 border border-slate-200 rounded text-slate-800 focus:outline-none focus:border-orange-500"
+                            />
+                            <span className="text-[10px] text-slate-400 font-bold uppercase">años</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 shrink-0">
                           <div className="text-right flex flex-col items-end">
                             <span className="text-[9px] text-slate-400 block font-mono font-black tracking-wider">REQ. MENSUAL</span>
                             <span className="font-mono font-extrabold text-orange-600">{ahorroReq} €</span>
@@ -2321,16 +2364,16 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Item 6: Eficiencia Fiscal */}
+                  {/* Item 6: Protección legal */}
                   <div>
                     <div className="flex justify-between text-xs mb-1 font-bold font-mono text-slate-700 uppercase">
-                      <span>6. Eficiencia Fiscal de Previsión</span>
-                      <span className="text-orange-600 font-extrabold">{scoreEficienciaFiscal}/10</span>
+                      <span>6. Protección legal</span>
+                      <span className="text-orange-600 font-extrabold">{scoreProteccionLegal}/10</span>
                     </div>
                     <div className="h-1.5 w-full bg-slate-200/60 border border-slate-300/40 overflow-hidden rounded-full shadow-inner">
                       <div 
                         className="h-full bg-gradient-to-r from-orange-600 to-amber-500 rounded-full" 
-                        style={{ width: `${scoreEficienciaFiscal * 10}%` }}
+                        style={{ width: `${scoreProteccionLegal * 10}%` }}
                       />
                     </div>
                   </div>
