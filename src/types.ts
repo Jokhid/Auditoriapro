@@ -11,6 +11,8 @@ export interface AuditQuestions {
 
 export interface ClientData {
   nombre: string;
+  telefono: string;
+  email: string;
   edad: number;
   anosCotizados: number;
   baseCotizacion: number;
