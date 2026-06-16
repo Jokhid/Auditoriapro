@@ -8,6 +8,148 @@
   <body>
     <div id="root"></div>
     <script>
+      (function () {
+        const cleanReportCss = `
+          main [class*="bg-[#1A1A1A]"],
+          main [class*="bg-[#0F172A]"],
+          main [class*="bg-slate-900"],
+          main [class*="bg-slate-950"],
+          main [class*="bg-black"],
+          main > section:first-of-type,
+          footer {
+            background: #ffffff !important;
+            background-image: none !important;
+            color: #1A1A1A !important;
+          }
+
+          main [class*="text-white"],
+          main [class*="text-slate-100"],
+          main [class*="text-slate-200"],
+          main [class*="text-slate-300"],
+          footer,
+          footer p,
+          footer li,
+          footer span {
+            color: #1A1A1A !important;
+          }
+
+          main [class*="border-white"],
+          main [class*="border-slate-700"],
+          main [class*="border-slate-800"],
+          main [class*="border-slate-850"] {
+            border-color: #E5E5E5 !important;
+          }
+
+          main h1,
+          main h2,
+          main h3,
+          main h4,
+          main h5,
+          main h6 {
+            color: #1A1A1A !important;
+          }
+
+          main [class*="text-[#C5A566]"],
+          main [class*="text-orange"],
+          main [class*="text-amber"],
+          footer a {
+            color: #C5A566 !important;
+          }
+
+          header.sticky,
+          header.sticky *:not([class*="text-[#C5A566]"]) {
+            background-color: #1A1A1A !important;
+            color: #ffffff !important;
+          }
+
+          header.sticky [class*="text-[#C5A566]"],
+          header.sticky a:hover,
+          header.sticky svg {
+            color: #C5A566 !important;
+          }
+
+          @media print {
+            @page {
+              size: A4;
+              margin: 28mm 12mm 12mm;
+            }
+
+            * {
+              print-color-adjust: exact !important;
+              -webkit-print-color-adjust: exact !important;
+            }
+
+            html,
+            body {
+              background: #ffffff !important;
+            }
+
+            header.sticky {
+              position: fixed !important;
+              top: 0 !important;
+              left: 0 !important;
+              right: 0 !important;
+              min-height: 22mm !important;
+              z-index: 9999 !important;
+              background: #1A1A1A !important;
+              color: #ffffff !important;
+              border-bottom: 0 !important;
+              box-shadow: none !important;
+            }
+
+            main {
+              max-width: none !important;
+              width: 100% !important;
+              padding-top: 0 !important;
+              background: #ffffff !important;
+            }
+
+            main section,
+            main article,
+            main .rounded-lg,
+            main .rounded-xl,
+            main .rounded-2xl,
+            main .rounded-3xl {
+              background: #ffffff !important;
+              background-image: none !important;
+              box-shadow: none !important;
+              break-inside: avoid;
+              page-break-inside: avoid;
+            }
+
+            footer {
+              display: none !important;
+            }
+
+            button,
+            [role="button"] {
+              box-shadow: none !important;
+            }
+
+            button:has(svg + span),
+            button:has(.lucide-download),
+            button:has(.lucide-arrow-left) {
+              display: none !important;
+            }
+          }
+        `;
+
+        function installReportStyles() {
+          let style = document.getElementById("audit-report-clean-print-styles");
+          if (!style) {
+            style = document.createElement("style");
+            style.id = "audit-report-clean-print-styles";
+            document.head.appendChild(style);
+          }
+          style.textContent = cleanReportCss;
+        }
+
+        installReportStyles();
+        document.addEventListener("DOMContentLoaded", installReportStyles);
+        window.addEventListener("load", installReportStyles);
+        window.setTimeout(installReportStyles, 1000);
+      })();
+
       document.addEventListener(
         "click",
         function (event) {
