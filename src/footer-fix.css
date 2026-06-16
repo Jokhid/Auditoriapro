@@ -1,0 +1,36 @@
+html body footer,
+html body #root footer,
+html body .print-report-root footer {
+  background: #1A1A1A !important;
+  background-image: none !important;
+  color: #ffffff !important;
+}
+
+html body footer p,
+html body footer li,
+html body footer span,
+html body footer strong,
+html body footer h1,
+html body footer h2,
+html body footer h3,
+html body footer h4,
+html body footer h5,
+html body footer h6 {
+  color: rgb(255 255 255 / 0.72) !important;
+}
+
+html body footer a {
+  color: #C5A566 !important;
+}
+
+html body footer a:hover {
+  color: #ffffff !important;
+}
+
+@media print {
+  html body footer,
+  html body #root footer,
+  html body .print-report-root footer {
+    display: none !important;
+  }
+}
