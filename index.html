@@ -8,10 +8,16 @@
   <body>
     <div id="pdf-premium-cover" aria-hidden="true">
       <div class="pdf-cover-header">
-        <div class="pdf-cover-mark">JH</div>
-        <div>
-          <div class="pdf-cover-name">JOSÉ CARLOS HIDALGO</div>
-          <div class="pdf-cover-subbrand">GESTIÓN PATRIMONIAL E HIPOTECARIA</div>
+        <div class="pdf-cover-brand">
+          <div class="pdf-cover-mark">JH</div>
+          <div>
+            <div class="pdf-cover-name">JOSÉ CARLOS HIDALGO</div>
+            <div class="pdf-cover-subbrand">GESTIÓN PATRIMONIAL E HIPOTECARIA</div>
+          </div>
+        </div>
+        <div class="pdf-cover-contact">
+          <span>josecarlos@hilolegal.es</span>
+          <span>647 50 60 40</span>
         </div>
       </div>
       <div class="pdf-cover-body">
@@ -30,10 +36,30 @@
       </div>
     </div>
     <div id="root"></div>
+    <section id="pdf-final-cta" aria-hidden="true">
+      <div class="pdf-cta-kicker">Próximo paso recomendado</div>
+      <h2>Transformar el diagnóstico en protección real</h2>
+      <p>
+        Este informe identifica las áreas donde tu estabilidad financiera y patrimonial puede estar más expuesta:
+        ingresos ante baja o invalidez, protección familiar, reserva de liquidez, jubilación, inflación y estructura legal.
+        El valor del diagnóstico está en convertir esas conclusiones en decisiones concretas, ordenadas y medibles.
+      </p>
+      <p>
+        Si alguna de las áreas aparece con vulnerabilidad relevante, te recomiendo revisar el caso conmigo de forma personalizada.
+        En una sesión de trabajo podemos priorizar las medidas, ajustar capitales y coberturas, comparar alternativas y diseñar
+        una estrategia realista para proteger tus ingresos, tu familia y tu patrimonio sin improvisar ni contratar productos innecesarios.
+      </p>
+      <div class="pdf-cta-contact">
+        <strong>Contacta conmigo para mejorar las áreas de mayor vulnerabilidad</strong>
+        <span>josecarlos@hilolegal.es</span>
+        <span>647 50 60 40</span>
+      </div>
+    </section>
     <script>
       (function () {
         const cleanReportCss = `
-          #pdf-premium-cover {
+          #pdf-premium-cover,
+          #pdf-final-cta {
             display: none;
           }
 
@@ -130,10 +156,17 @@
             .pdf-cover-header {
               display: flex;
               align-items: center;
+              justify-content: space-between;
               gap: 12px;
               background: #1A1A1A;
               color: #ffffff;
               padding: 12mm 14mm;
+            }
+
+            .pdf-cover-brand {
+              display: flex;
+              align-items: center;
+              gap: 12px;
             }
 
             .pdf-cover-mark {
@@ -164,6 +197,18 @@
               font-family: Inter, Arial, sans-serif;
               font-size: 7pt;
               letter-spacing: 0.22em;
+            }
+
+            .pdf-cover-contact {
+              display: flex;
+              flex-direction: column;
+              align-items: flex-end;
+              gap: 2mm;
+              color: #ffffff;
+              font-family: Inter, Arial, sans-serif;
+              font-size: 8pt;
+              font-weight: 800;
+              line-height: 1.2;
             }
 
             .pdf-cover-body {
@@ -222,6 +267,70 @@
               font-family: Inter, Arial, sans-serif;
               font-size: 8pt;
               font-weight: 700;
+            }
+
+            #pdf-final-cta {
+              display: block !important;
+              break-before: page;
+              page-break-before: always;
+              background: #ffffff !important;
+              border: 1px solid #E5E5E5;
+              padding: 18mm 16mm;
+              color: #1A1A1A;
+            }
+
+            .pdf-cta-kicker {
+              color: #C5A566;
+              font-family: Inter, Arial, sans-serif;
+              font-size: 8pt;
+              font-weight: 900;
+              letter-spacing: 0.24em;
+              text-transform: uppercase;
+            }
+
+            #pdf-final-cta h2 {
+              margin: 6mm 0 0;
+              color: #1A1A1A;
+              font-family: Inter, Arial, sans-serif;
+              font-size: 22pt;
+              line-height: 1.08;
+              font-weight: 900;
+              letter-spacing: -0.02em;
+            }
+
+            #pdf-final-cta p {
+              max-width: 165mm;
+              margin: 7mm 0 0;
+              color: #4A4A4A;
+              font-family: Inter, Arial, sans-serif;
+              font-size: 10.5pt;
+              line-height: 1.58;
+              font-weight: 500;
+            }
+
+            .pdf-cta-contact {
+              margin-top: 12mm;
+              padding: 8mm;
+              background: #1A1A1A;
+              color: #ffffff;
+              font-family: Inter, Arial, sans-serif;
+            }
+
+            .pdf-cta-contact strong {
+              display: block;
+              margin-bottom: 5mm;
+              color: #C5A566;
+              font-size: 11pt;
+              text-transform: uppercase;
+              letter-spacing: 0.08em;
+            }
+
+            .pdf-cta-contact span {
+              display: inline-block;
+              margin-right: 12mm;
+              color: #ffffff;
+              font-size: 10pt;
+              font-weight: 800;
             }
 
             header.sticky {
