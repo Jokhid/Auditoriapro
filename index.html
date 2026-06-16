@@ -7,7 +7,24 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      document.addEventListener(
+        "click",
+        function (event) {
+          const button = event.target && event.target.closest ? event.target.closest("button") : null;
+          if (!button) return;
+          const text = (button.textContent || "").toLowerCase();
+          const isPdfButton = text.includes("descargar") && (text.includes("pdf") || text.includes("auditoría") || text.includes("auditoria"));
+          if (!isPdfButton) return;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          window.setTimeout(function () {
+            window.print();
+          }, 80);
+        },
+        true
+      );
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-
