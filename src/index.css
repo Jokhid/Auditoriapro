@@ -235,8 +235,88 @@ header button[class*="bg-[#C5A566]"] {
   border-color: var(--brand-gold) !important;
 }
 
+header img[src="/jose-carlos-hidalgo-logo.svg"],
+footer img[src="/jose-carlos-hidalgo-logo.svg"] {
+  display: block;
+  background: transparent;
+}
+
+header a,
+header span,
+header strong {
+  color: #ffffff !important;
+}
+
 main {
   max-width: 1200px !important;
+}
+
+main > section:first-of-type {
+  background: var(--brand-black) !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+  margin-top: 2rem;
+  padding: clamp(3rem, 7vw, 5.5rem) clamp(1.5rem, 4vw, 3rem) !important;
+}
+
+main > section:first-of-type > div.absolute {
+  display: none !important;
+}
+
+main > section:first-of-type h1 {
+  color: #ffffff !important;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif !important;
+  font-size: clamp(2.35rem, 6vw, 4.75rem) !important;
+  font-style: normal !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  line-height: 0.98 !important;
+  text-transform: uppercase !important;
+}
+
+main > section:first-of-type h1 span {
+  color: var(--brand-gold) !important;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif !important;
+  font-style: normal !important;
+  font-weight: 900 !important;
+}
+
+main > section:first-of-type p {
+  color: rgb(255 255 255 / 0.72) !important;
+}
+
+main > section:first-of-type [class*="inline-flex"] {
+  background: rgb(255 255 255 / 0.03) !important;
+  border-color: rgb(255 255 255 / 0.12) !important;
+  border-radius: 0 !important;
+  color: var(--brand-gold) !important;
+  letter-spacing: 0.22em !important;
+}
+
+main > section:first-of-type .grid > div {
+  background: var(--brand-black) !important;
+  border-color: rgb(255 255 255 / 0.1) !important;
+  border-radius: 0 !important;
+}
+
+main > section:first-of-type .grid > div:hover {
+  background: rgb(255 255 255 / 0.045) !important;
+}
+
+main > section:first-of-type .grid span {
+  background: transparent !important;
+  color: var(--brand-gold) !important;
+  height: auto !important;
+  width: auto !important;
+}
+
+main > section:first-of-type .grid h3 {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  text-transform: uppercase;
 }
 
 .glass-panel h2,
@@ -310,4 +390,85 @@ footer [class*="border-slate-800"] {
   box-shadow: none !important;
   padding-left: 0 !important;
   padding-right: 0 !important;
+}
+
+/* Estudio previsor: adapta el cuadro de jubilación a la paleta negro/ocre/blanco. */
+[class*="border-[#F97316]"] {
+  border-color: var(--brand-gold) !important;
+}
+
+[class*="text-[#F97316]"],
+[class*="text-orange-300"] {
+  color: var(--brand-gold) !important;
+}
+
+[class*="bg-[#0F172A]"] {
+  background-color: var(--brand-black) !important;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  * {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  header.sticky {
+    position: static !important;
+    background: var(--brand-black) !important;
+    color: #ffffff !important;
+    min-height: auto !important;
+    page-break-after: avoid;
+  }
+
+  main {
+    max-width: none !important;
+    width: 100% !important;
+    padding: 10mm 0 !important;
+  }
+
+  main section,
+  main article,
+  main .rounded-lg,
+  main .rounded-xl,
+  main .rounded-2xl,
+  main .rounded-3xl {
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  main svg {
+    max-width: 100% !important;
+  }
+
+  button {
+    box-shadow: none !important;
+  }
+
+  button:has(svg + span),
+  button:has(.lucide-download),
+  button:has(.lucide-arrow-left) {
+    display: none !important;
+  }
+
+  footer {
+    background: var(--brand-black) !important;
+    color: #ffffff !important;
+    margin-top: 10mm !important;
+    page-break-before: avoid;
+  }
+
+  footer a {
+    color: var(--brand-gold) !important;
+  }
 }
