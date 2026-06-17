@@ -488,6 +488,7 @@
           addChartTitles();
         }
 
+        window.auditInstallAll = installAll;
         installAll();
         document.addEventListener("DOMContentLoaded", installAll);
         window.addEventListener("load", installAll);
@@ -506,7 +507,7 @@
           event.preventDefault();
           event.stopImmediatePropagation();
           window.setTimeout(function () {
-            installAll();
+            if (typeof window.auditInstallAll === "function") window.auditInstallAll();
             window.print();
           }, 80);
         },
