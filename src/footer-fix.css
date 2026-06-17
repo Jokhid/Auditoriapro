@@ -31,55 +31,12 @@ html body footer a:hover {
   html body header.sticky,
   html body #root header.sticky,
   html body .print-report-root header.sticky {
-    display: flex !important;
-    position: static !important;
-    background: #1A1A1A !important;
-    background-image: none !important;
-    color: #ffffff !important;
-    min-height: auto !important;
-    margin: 0 0 10mm 0 !important;
-    padding: 8mm 10mm !important;
-    page-break-after: avoid !important;
-    break-after: avoid !important;
-  }
-
-  html body header.sticky *,
-  html body #root header.sticky *,
-  html body .print-report-root header.sticky * {
-    color: #ffffff !important;
-  }
-
-  html body header.sticky [class*="text-[#C5A566]"],
-  html body header.sticky svg,
-  html body #root header.sticky [class*="text-[#C5A566]"],
-  html body #root header.sticky svg,
-  html body .print-report-root header.sticky [class*="text-[#C5A566]"],
-  html body .print-report-root header.sticky svg {
-    color: #C5A566 !important;
+    display: none !important;
   }
 
   html body footer,
   html body #root footer,
   html body .print-report-root footer {
-    display: block !important;
-    background: #1A1A1A !important;
-    background-image: none !important;
-    color: #ffffff !important;
-    margin-top: 12mm !important;
-    padding: 10mm !important;
-    page-break-before: avoid !important;
-    break-before: avoid !important;
-  }
-
-  html body footer *,
-  html body #root footer *,
-  html body .print-report-root footer * {
-    color: rgb(255 255 255 / 0.72) !important;
-  }
-
-  html body footer a,
-  html body #root footer a,
-  html body .print-report-root footer a {
-    color: #C5A566 !important;
+    display: none !important;
   }
 }
