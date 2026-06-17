@@ -75,6 +75,15 @@
             display: none;
           }
 
+          .audit-chart-title {
+            margin: 18px 0 10px;
+            color: #1A1A1A;
+            font-family: Inter, Arial, sans-serif;
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: 0;
+          }
+
           main [class*="bg-[#1A1A1A]"],
           main [class*="bg-[#0F172A]"],
           main [class*="bg-slate-900"],
@@ -157,7 +166,11 @@
             #pdf-premium-cover {
               display: flex !important;
               flex-direction: column;
-              min-height: 269mm;
+              height: 267mm;
+              min-height: 0 !important;
+              max-height: 267mm;
+              box-sizing: border-box;
+              overflow: hidden;
               page-break-after: always;
               break-after: page;
               background: #ffffff !important;
@@ -170,9 +183,10 @@
               align-items: center;
               justify-content: space-between;
               gap: 12px;
+              flex: 0 0 auto;
               background: #1A1A1A;
               color: #ffffff;
-              padding: 12mm 14mm;
+              padding: 10mm 14mm;
             }
 
             .pdf-cover-brand {
@@ -182,8 +196,8 @@
             }
 
             .pdf-cover-mark {
-              width: 18mm;
-              height: 21mm;
+              width: 17mm;
+              height: 20mm;
               display: flex;
               align-items: center;
               justify-content: center;
@@ -226,11 +240,11 @@
             }
 
             .pdf-cover-body {
-              flex: 1;
+              flex: 1 1 auto;
               display: flex;
               flex-direction: column;
               justify-content: center;
-              padding: 18mm 16mm 22mm;
+              padding: 14mm 16mm 16mm;
             }
 
             .pdf-cover-kicker {
@@ -247,7 +261,7 @@
               margin: 8mm 0 0;
               color: #1A1A1A;
               font-family: Inter, Arial, sans-serif;
-              font-size: 30pt;
+              font-size: 29pt;
               font-weight: 900;
               line-height: 1.02;
               letter-spacing: -0.02em;
@@ -257,17 +271,17 @@
             .pdf-cover-line {
               width: 34mm;
               height: 1.2mm;
-              margin-top: 10mm;
+              margin-top: 9mm;
               background: #C5A566;
             }
 
             .pdf-cover-body p {
               max-width: 150mm;
-              margin-top: 9mm;
+              margin-top: 8mm;
               color: #4A4A4A;
               font-family: Inter, Arial, sans-serif;
               font-size: 11pt;
-              line-height: 1.55;
+              line-height: 1.48;
               font-weight: 500;
             }
 
@@ -275,8 +289,9 @@
               display: flex;
               justify-content: space-between;
               gap: 8mm;
+              flex: 0 0 auto;
               border-top: 1px solid #E5E5E5;
-              padding: 7mm 14mm;
+              padding: 6mm 14mm;
               color: #4A4A4A;
               font-family: Inter, Arial, sans-serif;
               font-size: 8pt;
@@ -366,11 +381,18 @@
               break-inside: auto !important;
               page-break-inside: auto !important;
               margin-top: 0 !important;
-              margin-bottom: 8mm !important;
+              margin-bottom: 7mm !important;
+              padding-top: 0 !important;
             }
 
             main section:first-of-type {
               margin-top: 0 !important;
+              break-before: auto !important;
+              page-break-before: auto !important;
+            }
+
+            main section:first-of-type > *:first-child {
+              margin-bottom: 4mm !important;
             }
 
             main article,
@@ -392,6 +414,14 @@
               break-after: avoid !important;
               page-break-after: avoid !important;
               margin-top: 0 !important;
+              margin-bottom: 4mm !important;
+            }
+
+            .audit-chart-title {
+              break-after: avoid !important;
+              page-break-after: avoid !important;
+              margin: 5mm 0 3mm !important;
+              font-size: 10.5pt !important;
             }
 
             main svg {
@@ -425,10 +455,44 @@
           style.textContent = cleanReportCss;
         }
 
-        installReportStyles();
-        document.addEventListener("DOMContentLoaded", installReportStyles);
-        window.addEventListener("load", installReportStyles);
-        window.setTimeout(installReportStyles, 1000);
+        function addChartTitles() {
+          const sections = Array.from(document.querySelectorAll("main section"));
+          const configs = [
+            {
+              match: "auditoría de previsión social",
+              title: "Comparativa de prestaciones públicas frente a gastos mensuales requeridos"
+            },
+            {
+              match: "estudio brecha de jubilación",
+              title: "Proyección de brecha de jubilación y capital objetivo"
+            }
+          ];
+
+          configs.forEach(function (config) {
+            const section = sections.find(function (item) {
+              return (item.textContent || "").toLowerCase().includes(config.match);
+            });
+            if (!section || section.querySelector(".audit-chart-title")) return;
+            const chartHost = section.querySelector(".recharts-responsive-container") || section.querySelector("svg");
+            if (!chartHost) return;
+            const title = document.createElement("h3");
+            title.className = "audit-chart-title";
+            title.textContent = config.title;
+            const wrapper = chartHost.closest("div") || chartHost;
+            wrapper.parentNode.insertBefore(title, wrapper);
+          });
+        }
+
+        function installAll() {
+          installReportStyles();
+          addChartTitles();
+        }
+
+        installAll();
+        document.addEventListener("DOMContentLoaded", installAll);
+        window.addEventListener("load", installAll);
+        window.setTimeout(installAll, 500);
+        window.setTimeout(installAll, 1500);
       })();
 
       document.addEventListener(
@@ -442,6 +506,7 @@
           event.preventDefault();
           event.stopImmediatePropagation();
           window.setTimeout(function () {
+            installAll();
             window.print();
           }, 80);
         },
