@@ -4,9 +4,112 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Auditoría Previsional | José Carlos Hidalgo</title>
+    <style>
+      .retirement-pension-estimate-card {
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #0f172a;
+        border-radius: 8px;
+        padding: 16px;
+      }
+
+      .retirement-pension-estimate-card p:first-child {
+        margin: 0;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .retirement-pension-estimate-card p:nth-child(2) {
+        margin: 8px 0 0;
+        color: #0f172a;
+        font-size: 18px;
+        font-weight: 900;
+      }
+
+      .retirement-pension-estimate-note {
+        margin-top: 8px;
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      (function () {
+        function numberFromLabel(labelText) {
+          const labels = Array.from(document.querySelectorAll("label"));
+          const label = labels.find(function (item) {
+            return (item.textContent || "").toLowerCase().includes(labelText);
+          });
+          if (!label) return 0;
+          const input = label.querySelector("input, select");
+          return input ? Number(String(input.value).replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0 : 0;
+        }
+
+        function formatEuro(value) {
+          return Math.round(value).toLocaleString("es-ES") + " EUR";
+        }
+
+        function calculateRetirementPension() {
+          const base = numberFromLabel("base cotización");
+          const age = numberFromLabel("edad");
+          const contributedYears = numberFromLabel("años cotizados");
+          const yearsToRetirement = Math.max(0, 67 - age);
+          const estimatedYears = contributedYears + yearsToRetirement;
+          const retirementRate = estimatedYears < 15 ? 0 : estimatedYears >= 36.5 ? 1 : 0.5 + (estimatedYears - 15) * (0.5 / 21.5);
+          return {
+            amount: Math.max(0, base * retirementRate),
+            estimatedYears: estimatedYears,
+            rate: retirementRate
+          };
+        }
+
+        function upsertRetirementPensionEstimate() {
+          const sections = Array.from(document.querySelectorAll("main section"));
+          const section = sections.find(function (item) {
+            return (item.textContent || "").toLowerCase().includes("estudio brecha de jubilación");
+          });
+          if (!section) return;
+
+          const data = calculateRetirementPension();
+          let card = section.querySelector(".retirement-pension-estimate-card");
+          if (!card) {
+            card = document.createElement("div");
+            card.className = "retirement-pension-estimate-card";
+            const metricGrid = Array.from(section.querySelectorAll("div")).find(function (item) {
+              return item.className && String(item.className).includes("md:grid-cols-3") && (item.textContent || "").includes("Brecha mensual");
+            });
+            if (metricGrid) {
+              metricGrid.className = String(metricGrid.className).replace("md:grid-cols-3", "md:grid-cols-4");
+              metricGrid.appendChild(card);
+            } else {
+              section.appendChild(card);
+            }
+          }
+
+          card.innerHTML =
+            '<p>Pensión jubilación estimada</p>' +
+            '<p>' + formatEuro(data.amount) + ' / mes</p>' +
+            '<div class="retirement-pension-estimate-note">Calculada según base de cotización, edad actual y años cotizados estimados hasta los 67 años.</div>';
+        }
+
+        document.addEventListener("input", function () {
+          window.setTimeout(upsertRetirementPensionEstimate, 50);
+        });
+        document.addEventListener("change", function () {
+          window.setTimeout(upsertRetirementPensionEstimate, 50);
+        });
+        document.addEventListener("DOMContentLoaded", upsertRetirementPensionEstimate);
+        window.addEventListener("load", upsertRetirementPensionEstimate);
+        window.setTimeout(upsertRetirementPensionEstimate, 500);
+        window.setTimeout(upsertRetirementPensionEstimate, 1500);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
