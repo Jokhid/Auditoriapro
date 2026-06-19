@@ -1,3 +1,18 @@
+html body main > section:first-of-type,
+html body #root main > section:first-of-type {
+  background: #ffffff !important;
+  background-image: none !important;
+  color: #0f172a !important;
+}
+
+html body main > section:first-of-type input,
+html body main > section:first-of-type select,
+html body #root main > section:first-of-type input,
+html body #root main > section:first-of-type select {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
 html body footer,
 html body #root footer,
 html body .print-report-root footer {
