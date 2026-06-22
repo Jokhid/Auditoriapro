@@ -35,6 +35,98 @@
         font-size: 12px;
         line-height: 1.45;
       }
+
+      .audit-extra-question {
+        display: block;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 16px;
+      }
+
+      .audit-extra-question-kicker {
+        display: block;
+        margin-bottom: 4px;
+        color: #C5A566;
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .audit-extra-question-title {
+        display: block;
+        color: #0f172a;
+        font-size: 14px;
+        font-weight: 900;
+      }
+
+      .audit-extra-question-description {
+        display: block;
+        margin-top: 8px;
+        color: #475569;
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .audit-extra-question select {
+        width: 100%;
+        margin-top: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 8px 12px;
+        color: #0f172a;
+        font-size: 14px;
+      }
+
+      .audit-extra-results {
+        margin-top: 24px;
+        display: grid;
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      @media (min-width: 1024px) {
+        .audit-extra-results {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      .audit-extra-result-card {
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        border-radius: 8px;
+        padding: 16px;
+      }
+
+      .audit-extra-result-card h3 {
+        margin: 0;
+        color: #0f172a;
+        font-size: 15px;
+        font-weight: 900;
+      }
+
+      .audit-extra-result-card p {
+        margin: 10px 0 0;
+        color: #475569;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .audit-extra-result-badge {
+        display: inline-block;
+        margin-top: 12px;
+        border-radius: 6px;
+        padding: 5px 8px;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .audit-extra-result-badge.grave { background: #dc2626; }
+      .audit-extra-result-badge.moderada { background: #f97316; }
+      .audit-extra-result-badge.leve { background: #16a34a; }
     </style>
   </head>
   <body>
@@ -43,6 +135,59 @@
       (function () {
         const oldIncomeQuestion = "¿Tienes identificado quién sostiene económicamente la unidad familiar?";
         const newIncomeQuestion = "¿Los ingresos de tu familia dependen principalmente de ti?";
+        const extraQuestions = [
+          {
+            id: "retirementPublicDependency",
+            label: "Dependencia pública",
+            title: "¿Dependencia prevista del sistema público en la jubilación?",
+            description: "Mide cuánto dependerá el cliente de la pensión pública para mantener su nivel de vida futuro.",
+            options: ["Baja (autosuficiente)", "Media", "Alta"],
+            defaultValue: "Media"
+          },
+          {
+            id: "debtIncomeRatio",
+            label: "Carga de deuda",
+            title: "¿El total de tus préstamos e hipotecas superan el 35% de tus ingresos?",
+            description: "Permite valorar si la deuda compromete la capacidad de ahorro, protección familiar y estabilidad financiera.",
+            options: ["Sí, lo superan.", "No, están por debajo.", "Están justo en el límite."],
+            defaultValue: "Están justo en el límite."
+          }
+        ];
+
+        function getStoredAnswer(question) {
+          return localStorage.getItem("audit-extra-" + question.id) || question.defaultValue;
+        }
+
+        function setStoredAnswer(questionId, value) {
+          localStorage.setItem("audit-extra-" + questionId, value);
+        }
+
+        function getExtraAssessment() {
+          const retirement = getStoredAnswer(extraQuestions[0]);
+          const debt = getStoredAnswer(extraQuestions[1]);
+          return [
+            {
+              title: "Dependencia prevista del sistema público en la jubilación",
+              value: retirement,
+              severity: retirement === "Alta" ? "grave" : retirement === "Media" ? "moderada" : "leve",
+              result: retirement === "Alta"
+                ? "Existe una dependencia elevada de la pensión pública. Conviene reforzar ahorro finalista, inversión a largo plazo y capital privado de jubilación."
+                : retirement === "Media"
+                  ? "La dependencia del sistema público es relevante pero corregible. Es recomendable aumentar aportaciones periódicas y revisar la brecha de jubilación."
+                  : "La dependencia pública es baja. El objetivo debe ser preservar la autosuficiencia y controlar inflación, fiscalidad y liquidez futura."
+            },
+            {
+              title: "Carga de préstamos e hipotecas sobre ingresos",
+              value: debt,
+              severity: debt === "Sí, lo superan." ? "grave" : debt === "Están justo en el límite." ? "moderada" : "leve",
+              result: debt === "Sí, lo superan."
+                ? "La carga de deuda supera el umbral prudente del 35% de ingresos. Prioridad alta: reducir exposición, renegociar cuotas y proteger ingresos."
+                : debt === "Están justo en el límite."
+                  ? "La carga financiera está ajustada. Cualquier caída de ingresos puede tensionar el presupuesto, por lo que conviene reforzar liquidez y control de deuda."
+                  : "La carga de deuda está por debajo del umbral de alerta. Mantener ese margen mejora la capacidad de ahorro y la resistencia ante imprevistos."
+            }
+          ];
+        }
 
         function replaceIncomeQuestionText() {
           const candidates = Array.from(document.querySelectorAll("span, p, h3, label"));
@@ -51,6 +196,88 @@
               item.textContent = newIncomeQuestion;
             }
           });
+        }
+
+        function findSectionByText(text) {
+          const needle = text.toLowerCase();
+          return Array.from(document.querySelectorAll("main section")).find(function (item) {
+            return (item.textContent || "").toLowerCase().includes(needle);
+          });
+        }
+
+        function upsertExtraQuestionnaireItems() {
+          const section = findSectionByText("cuestionario completo de auditoría");
+          if (!section) return;
+          const grid = Array.from(section.querySelectorAll("div")).find(function (item) {
+            return String(item.className || "").includes("md:grid-cols-2");
+          });
+          if (!grid) return;
+
+          extraQuestions.forEach(function (question) {
+            let wrapper = grid.querySelector('[data-extra-question="' + question.id + '"]');
+            if (!wrapper) {
+              wrapper = document.createElement("label");
+              wrapper.className = "audit-extra-question";
+              wrapper.setAttribute("data-extra-question", question.id);
+              wrapper.innerHTML =
+                '<span class="audit-extra-question-kicker"></span>' +
+                '<span class="audit-extra-question-title"></span>' +
+                '<span class="audit-extra-question-description"></span>' +
+                '<select></select>';
+              grid.appendChild(wrapper);
+            }
+
+            wrapper.querySelector(".audit-extra-question-kicker").textContent = question.label;
+            wrapper.querySelector(".audit-extra-question-title").textContent = question.title;
+            wrapper.querySelector(".audit-extra-question-description").textContent = question.description;
+            const select = wrapper.querySelector("select");
+            select.innerHTML = question.options.map(function (option) {
+              return '<option value="' + option.replace(/"/g, "&quot;") + '">' + option + '</option>';
+            }).join("");
+            select.value = getStoredAnswer(question);
+            select.onchange = function () {
+              setStoredAnswer(question.id, select.value);
+              upsertExtraResultBlocks();
+            };
+          });
+        }
+
+        function renderResultCards(container, mode) {
+          container.innerHTML = "";
+          getExtraAssessment().forEach(function (item) {
+            const article = document.createElement("article");
+            article.className = "audit-extra-result-card";
+            article.innerHTML =
+              '<h3>' + item.title + '</h3>' +
+              '<span class="audit-extra-result-badge ' + item.severity + '">' + item.severity + '</span>' +
+              '<p><strong>Respuesta:</strong> ' + item.value + '</p>' +
+              '<p>' + (mode === "diagnosis" ? '<strong>Impacto en el plan de acción:</strong> ' : '<strong>Lectura de vulnerabilidad:</strong> ') + item.result + '</p>';
+            container.appendChild(article);
+          });
+        }
+
+        function upsertExtraResultBlocks() {
+          const securitySection = findSectionByText("niveles de seguridad y vulnerabilidad");
+          if (securitySection) {
+            let securityResults = securitySection.querySelector(".audit-extra-results");
+            if (!securityResults) {
+              securityResults = document.createElement("div");
+              securityResults.className = "audit-extra-results";
+              securitySection.appendChild(securityResults);
+            }
+            renderResultCards(securityResults, "security");
+          }
+
+          const diagnosisSection = findSectionByText("diagnóstico estratégico y plan de acción");
+          if (diagnosisSection) {
+            let diagnosisResults = diagnosisSection.querySelector(".audit-extra-results");
+            if (!diagnosisResults) {
+              diagnosisResults = document.createElement("div");
+              diagnosisResults.className = "audit-extra-results";
+              diagnosisSection.appendChild(diagnosisResults);
+            }
+            renderResultCards(diagnosisResults, "diagnosis");
+          }
         }
 
         function numberFromLabel(labelText) {
@@ -82,10 +309,7 @@
         }
 
         function upsertRetirementPensionEstimate() {
-          const sections = Array.from(document.querySelectorAll("main section"));
-          const section = sections.find(function (item) {
-            return (item.textContent || "").toLowerCase().includes("estudio brecha de jubilación");
-          });
+          const section = findSectionByText("estudio brecha de jubilación");
           if (!section) return;
 
           const data = calculateRetirementPension();
@@ -112,6 +336,8 @@
 
         function installAuditEnhancements() {
           replaceIncomeQuestionText();
+          upsertExtraQuestionnaireItems();
+          upsertExtraResultBlocks();
           upsertRetirementPensionEstimate();
         }
 
