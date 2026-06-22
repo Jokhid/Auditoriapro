@@ -19,6 +19,15 @@ function fieldNumber(labelText: string) {
   return numberFromText(input?.value || '0');
 }
 
+function fieldValue(labelText: string) {
+  const needle = labelText.toLowerCase();
+  const label = Array.from(document.querySelectorAll('label')).find((item) =>
+    (item.textContent || '').toLowerCase().includes(needle),
+  );
+  const input = label?.querySelector('input, select') as HTMLInputElement | HTMLSelectElement | null;
+  return String(input?.value || '');
+}
+
 function storedNumber(key: string) {
   return numberFromText(localStorage.getItem(key) || '0');
 }
@@ -41,6 +50,21 @@ function getRealEstateData() {
   const retirementRate = estimatedYears < 15 ? 0 : estimatedYears >= 36.5 ? 1 : 0.5 + (estimatedYears - 15) * (0.5 / 21.5);
   const retirementPension = base * retirementRate;
   const adjustedExpenses = Math.max(0, monthlyExpenses - realEstateRents);
+  const state = fieldValue('estado civil');
+  const married = state === 'Casado/a' || state === 'Pareja de Hecho';
+  const children = fieldNumber('hijos menores');
+  const benefits = [
+    { label: 'Baja laboral', value: base * 0.75 },
+    { label: 'Invalidez absoluta', value: base },
+    { label: 'Invalidez profesional', value: age >= 55 ? base * 0.75 : base * 0.55 },
+    { label: 'Viudedad', value: married ? base * 0.52 : 0 },
+    { label: 'Orfandad', value: base * 0.2 * children },
+    { label: 'Jubilación', value: retirementPension },
+  ];
+  const adjustedBenefitGaps = benefits.map((benefit) => ({
+    ...benefit,
+    gap: Math.max(0, adjustedExpenses - benefit.value),
+  }));
   const retirementGap = Math.max(0, adjustedExpenses - retirementPension);
   const accumulatedBank = bank;
   const projectedInvested = invested * Math.pow(1 + investmentReturn, yearsToRetirement);
@@ -55,6 +79,7 @@ function getRealEstateData() {
     salary,
     monthlyExpenses,
     adjustedExpenses,
+    adjustedBenefitGaps,
     realEstateInvestments,
     realEstateRents,
     retirementPension,
@@ -156,7 +181,10 @@ function upsertGapNotice() {
   }
   notice.innerHTML =
     '<h3>Ajuste por rentas inmobiliarias</h3>' +
-    `<p>Gastos mensuales declarados: <strong>${money(data.monthlyExpenses)}</strong>. Rentas inmobiliarias mensuales: <strong>${money(data.realEstateRents)}</strong>. Gasto neto utilizado para analizar brechas: <strong>${money(data.adjustedExpenses)}</strong>.</p>`;
+    `<p>Gastos mensuales declarados: <strong>${money(data.monthlyExpenses)}</strong>. Rentas inmobiliarias mensuales: <strong>${money(data.realEstateRents)}</strong>. Gasto neto utilizado para analizar brechas: <strong>${money(data.adjustedExpenses)}</strong>.</p>` +
+    '<div class="audit-real-estate-grid audit-real-estate-benefits">' +
+    data.adjustedBenefitGaps.map((item) => row(item.label, item.gap, `Brecha ajustada. Prestación estimada: ${money(item.value)}`)).join('') +
+    '</div>';
 }
 
 function installStyles() {
