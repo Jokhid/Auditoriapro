@@ -41,6 +41,18 @@
     <div id="root"></div>
     <script>
       (function () {
+        const oldIncomeQuestion = "¿Tienes identificado quién sostiene económicamente la unidad familiar?";
+        const newIncomeQuestion = "¿Los ingresos de tu familia dependen principalmente de ti?";
+
+        function replaceIncomeQuestionText() {
+          const candidates = Array.from(document.querySelectorAll("span, p, h3, label"));
+          candidates.forEach(function (item) {
+            if ((item.textContent || "").trim() === oldIncomeQuestion) {
+              item.textContent = newIncomeQuestion;
+            }
+          });
+        }
+
         function numberFromLabel(labelText) {
           const labels = Array.from(document.querySelectorAll("label"));
           const label = labels.find(function (item) {
@@ -98,16 +110,21 @@
             '<div class="retirement-pension-estimate-note">Calculada según base de cotización, edad actual y años cotizados estimados hasta los 67 años.</div>';
         }
 
+        function installAuditEnhancements() {
+          replaceIncomeQuestionText();
+          upsertRetirementPensionEstimate();
+        }
+
         document.addEventListener("input", function () {
-          window.setTimeout(upsertRetirementPensionEstimate, 50);
+          window.setTimeout(installAuditEnhancements, 50);
         });
         document.addEventListener("change", function () {
-          window.setTimeout(upsertRetirementPensionEstimate, 50);
+          window.setTimeout(installAuditEnhancements, 50);
         });
-        document.addEventListener("DOMContentLoaded", upsertRetirementPensionEstimate);
-        window.addEventListener("load", upsertRetirementPensionEstimate);
-        window.setTimeout(upsertRetirementPensionEstimate, 500);
-        window.setTimeout(upsertRetirementPensionEstimate, 1500);
+        document.addEventListener("DOMContentLoaded", installAuditEnhancements);
+        window.addEventListener("load", installAuditEnhancements);
+        window.setTimeout(installAuditEnhancements, 500);
+        window.setTimeout(installAuditEnhancements, 1500);
       })();
     </script>
     <script type="module" src="/src/main.tsx"></script>
