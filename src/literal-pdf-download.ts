@@ -1,7 +1,6 @@
 import { jsPDF } from 'jspdf';
 
 const DOWNLOAD_FLAG = '__auditLiteralPdfDownloadInstalled';
-const brand = { black: '#1A1A1A', gold: '#C5A566', slate: '#0F172A', muted: '#475569' };
 
 type ChartCapture = { title: string; dataUrl: string; width: number; height: number };
 
@@ -253,14 +252,14 @@ async function generateLiteralPdf() {
 
 function setButtonBusy(button: HTMLButtonElement, busy: boolean) {
   if (busy) {
-    button.dataset.originalText = button.innerText;
+    button.dataset.originalHtml = button.innerHTML;
     button.disabled = true;
     button.style.opacity = '0.72';
-    button.innerText = 'Generando informe PDF...';
+    button.innerHTML = '<span>Generando informe PDF...</span>';
   } else {
     button.disabled = false;
     button.style.opacity = '';
-    if (button.dataset.originalText) button.innerText = button.dataset.originalText;
+    if (button.dataset.originalHtml) button.innerHTML = button.dataset.originalHtml;
   }
 }
 
@@ -286,7 +285,7 @@ function installLiteralPdfDownload() {
 
     try {
       setButtonBusy(button, true);
-      await new Promise((resolve) => window.requestAnimationFrame(resolve));
+      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
       await generateLiteralPdf();
     } catch (error) {
       console.error(error);
