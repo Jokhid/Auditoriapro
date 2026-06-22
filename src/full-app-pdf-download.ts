@@ -23,6 +23,14 @@ function fieldValue(labelText: string) {
   return cleanText(input?.value || 'cliente');
 }
 
+function numberFromField(labelText: string) {
+  return Number(fieldValue(labelText).replace(/[^0-9.,-]/g, '').replace(',', '.')) || 0;
+}
+
+function euro(value: number) {
+  return `${Math.round(value).toLocaleString('es-ES')} EUR`;
+}
+
 function fileName(value: string) {
   return cleanText(value || 'cliente')
     .toLowerCase()
@@ -43,6 +51,114 @@ function withTimeout<T>(promise: Promise<T>, ms: number, message: string) {
       reject(error);
     });
   });
+}
+
+function chartAxisTicks(maxValue: number) {
+  const safeMax = Math.max(1, maxValue);
+  return [0, 0.25, 0.5, 0.75, 1].map((ratio) => euro(safeMax * ratio));
+}
+
+function calculateChartMetadata() {
+  const base = numberFromField('base cotización') || numberFromField('base cotizacion');
+  const age = numberFromField('edad');
+  const years = numberFromField('años cotizados') || numberFromField('anos cotizados');
+  const expenses = numberFromField('gastos mensuales') + numberFromField('alquiler, hipoteca y préstamos');
+  const realEstateRents = numberFromField('rentas inmobiliarias');
+  const adjustedExpenses = Math.max(0, expenses - realEstateRents);
+  const yearsToRetirement = Math.max(0, 67 - age);
+  const estimatedYears = years + yearsToRetirement;
+  const retirementRate = estimatedYears < 15 ? 0 : estimatedYears >= 36.5 ? 1 : 0.5 + (estimatedYears - 15) * (0.5 / 21.5);
+  const retirementPension = base * retirementRate;
+  const targetCapital = Math.max(0, adjustedExpenses - retirementPension) * 12 * 23;
+  const bank = numberFromField('dinero en banco');
+  const invested = numberFromField('dinero invertido');
+  const monthlySaving = numberFromField('ahorro sistemático mensual') || numberFromField('ahorro sistematico mensual');
+  const realEstateInvestments = numberFromField('inversiones inmobiliarias');
+  const maxBenefit = Math.max(expenses, adjustedExpenses, base, base * 0.75, base * 0.55, retirementPension, 1);
+  const projectedMax = Math.max(targetCapital, bank + invested + realEstateInvestments + monthlySaving * 12 * Math.max(1, yearsToRetirement), 1);
+
+  return {
+    benefits: {
+      title: 'Comparativa gráfica de prestaciones frente a gastos',
+      x: ['Baja laboral', 'Inv. absoluta', 'Inv. profesional', 'Viudedad', 'Orfandad', 'Jubilación'],
+      y: chartAxisTicks(maxBenefit),
+    },
+    retirement: {
+      title: 'Estudio brecha de jubilación',
+      x: [`${age || 0} años`, `${Math.round(((age || 0) + 67) / 2)} años`, '67 años', '90 años'],
+      y: chartAxisTicks(projectedMax),
+    },
+    vulnerability: {
+      title: 'Niveles de Seguridad y Vulnerabilidad',
+      x: ['Fondo', 'Baja', 'Familia', 'Sanidad', 'Inflación', 'Legal'],
+      y: ['0%', '25%', '50%', '75%', '100%'],
+    },
+  };
+}
+
+function sectionFor(text: string) {
+  const needle = text.toLowerCase();
+  return Array.from(document.querySelectorAll('main section')).find((section) =>
+    (section.textContent || '').toLowerCase().includes(needle),
+  ) as HTMLElement | undefined;
+}
+
+function axisHtml(title: string, xValues: string[], yValues: string[]) {
+  return `
+    <div class="audit-pdf-chart-caption" data-pdf-chart-caption="true">
+      <h3>${title}</h3>
+      <div><strong>Eje X:</strong> ${xValues.join(' | ')}</div>
+      <div><strong>Eje Y:</strong> ${yValues.join(' | ')}</div>
+    </div>
+  `;
+}
+
+function insertChartCaption(section: HTMLElement | undefined, html: string) {
+  if (!section || section.querySelector('[data-pdf-chart-caption="true"]')) return;
+  const host = section.querySelector('.recharts-responsive-container, svg') as HTMLElement | SVGElement | null;
+  if (!host?.parentElement) return;
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = html;
+  host.parentElement.insertBefore(wrapper.firstElementChild as HTMLElement, host);
+}
+
+function enhanceChartsForPdf() {
+  if (document.getElementById('audit-pdf-chart-caption-style')) return;
+  const style = document.createElement('style');
+  style.id = 'audit-pdf-chart-caption-style';
+  style.textContent = `
+    .audit-pdf-chart-caption {
+      margin: 0 0 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 10px 12px;
+      color: #0f172a;
+    }
+    .audit-pdf-chart-caption h3 {
+      margin: 0 0 6px;
+      color: #C5A566;
+      font-size: 15px;
+      font-weight: 900;
+    }
+    .audit-pdf-chart-caption div {
+      color: #475569;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+    .audit-pdf-chart-caption strong { color: #0f172a; }
+  `;
+  document.head.appendChild(style);
+  const meta = calculateChartMetadata();
+  insertChartCaption(sectionFor('2. Auditoría de Previsión Social'), axisHtml(meta.benefits.title, meta.benefits.x, meta.benefits.y));
+  insertChartCaption(sectionFor('3. Estudio brecha de jubilación'), axisHtml(meta.retirement.title, meta.retirement.x, meta.retirement.y));
+  insertChartCaption(sectionFor('4. Niveles de Seguridad y Vulnerabilidad'), axisHtml(meta.vulnerability.title, meta.vulnerability.x, meta.vulnerability.y));
+}
+
+function cleanupChartEnhancements() {
+  document.querySelectorAll('[data-pdf-chart-caption="true"]').forEach((item) => item.remove());
+  document.getElementById('audit-pdf-chart-caption-style')?.remove();
 }
 
 function copyInputState(source: HTMLElement, clone: HTMLElement) {
@@ -97,7 +213,6 @@ function prepareClone(element: HTMLElement) {
     }
   });
 
-  clone.querySelectorAll('[data-chart-title], .audit-chart-heading').forEach((item) => item.remove());
   clone.style.position = 'static';
   clone.style.transform = 'none';
   clone.style.width = `${Math.max(360, Math.ceil(rect.width || element.scrollWidth || 1000))}px`;
@@ -180,7 +295,8 @@ function getBlocksToCapture() {
 
 async function captureApplication() {
   window.dispatchEvent(new CustomEvent('audit-real-estate-updated'));
-  await new Promise<void>((resolve) => window.setTimeout(resolve, 120));
+  enhanceChartsForPdf();
+  await new Promise<void>((resolve) => window.setTimeout(resolve, 160));
   const blocks = getBlocksToCapture();
   const captures: CaptureBlock[] = [];
   for (const block of blocks) {
@@ -190,6 +306,7 @@ async function captureApplication() {
       console.warn('Se omitió una sección del PDF literal:', error);
     }
   }
+  cleanupChartEnhancements();
   return captures;
 }
 
@@ -243,6 +360,7 @@ async function addCapture(doc: jsPDF, capture: CaptureBlock, cursorY: number) {
 }
 
 function generateFallbackPdf() {
+  cleanupChartEnhancements();
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   doc.setFont('Helvetica', 'bold');
   doc.setFontSize(15);
@@ -268,6 +386,7 @@ async function generateFullAppPdf() {
   for (const capture of captures) {
     cursorY = await addCapture(doc, capture, cursorY);
   }
+  cleanupChartEnhancements();
 
   doc.save(`auditoria-literal-app-${fileName(fieldValue('nombre'))}.pdf`);
 }
@@ -312,6 +431,7 @@ function installFullAppPdfDownload() {
       console.error(error);
       generateFallbackPdf();
     } finally {
+      cleanupChartEnhancements();
       setButtonBusy(button, false);
     }
   }, true);
