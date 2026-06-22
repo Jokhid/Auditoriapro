@@ -3,6 +3,17 @@ import { jsPDF } from 'jspdf';
 const DOWNLOAD_FLAG = '__auditLiteralPdfDownloadInstalled';
 
 type ChartCapture = { title: string; dataUrl: string; width: number; height: number };
+type RealEstateData = {
+  realEstateInvestments: number;
+  realEstateRents: number;
+  adjustedExpenses: number;
+  retirementGap: number;
+  accumulatedBank: number;
+  projectedInvested: number;
+  projectedSaving: number;
+  projectedRents: number;
+  projectedTotal: number;
+};
 
 function findSection(text: string) {
   const needle = text.toLowerCase();
@@ -24,6 +35,10 @@ function euroFileName(value: string) {
     .replace(/^-|-$/g, '') || 'cliente';
 }
 
+function euro(value: number) {
+  return `${Math.round(value).toLocaleString('es-ES')} EUR`;
+}
+
 function fieldValue(labelText: string) {
   const needle = labelText.toLowerCase();
   const label = Array.from(document.querySelectorAll('label')).find((item) =>
@@ -31,6 +46,31 @@ function fieldValue(labelText: string) {
   );
   const input = label?.querySelector('input, select') as HTMLInputElement | HTMLSelectElement | null;
   return cleanText(input?.value || '');
+}
+
+function numberFromText(value: string) {
+  return Number(String(value || '').replace(/[^0-9.,-]/g, '').replace(',', '.')) || 0;
+}
+
+function fallbackFieldNumber(labelText: string) {
+  return numberFromText(fieldValue(labelText));
+}
+
+function getRealEstateData(): RealEstateData {
+  const win = window as typeof window & { auditRealEstateData?: () => RealEstateData };
+  if (typeof win.auditRealEstateData === 'function') return win.auditRealEstateData();
+
+  return {
+    realEstateInvestments: 0,
+    realEstateRents: 0,
+    adjustedExpenses: fallbackFieldNumber('gastos mensuales') + fallbackFieldNumber('alquiler, hipoteca y préstamos'),
+    retirementGap: 0,
+    accumulatedBank: fallbackFieldNumber('dinero en banco'),
+    projectedInvested: fallbackFieldNumber('dinero invertido'),
+    projectedSaving: fallbackFieldNumber('ahorro sistemático mensual'),
+    projectedRents: 0,
+    projectedTotal: fallbackFieldNumber('dinero en banco') + fallbackFieldNumber('dinero invertido'),
+  };
 }
 
 function getExecutiveSummaryText() {
@@ -166,17 +206,58 @@ function addSectionTitle(doc: jsPDF, title: string, y: number) {
 }
 
 function addClientSummary(doc: jsPDF, y: number) {
+  const realEstate = getRealEstateData();
   const rows = [
     `Cliente: ${fieldValue('nombre') || 'No indicado'}`,
     `Teléfono: ${fieldValue('teléfono') || 'No indicado'} | Email: ${fieldValue('email') || 'No indicado'}`,
     `Edad: ${fieldValue('edad') || '-'} años | Años cotizados: ${fieldValue('años cotizados') || '-'}`,
     `Base de cotización: ${fieldValue('base cotización') || '-'} EUR | Estado civil: ${fieldValue('estado civil') || '-'}`,
+    `Inversiones inmobiliarias: ${euro(realEstate.realEstateInvestments)} | Rentas inmobiliarias: ${euro(realEstate.realEstateRents)} / mes`,
   ];
 
   doc.setFont('Helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(71, 85, 105);
   rows.forEach((row, index) => doc.text(row, 18, y + index * 6));
+}
+
+function addRealEstateBreakdown(doc: jsPDF, y: number) {
+  const data = getRealEstateData();
+  addSectionTitle(doc, 'Desglose inmobiliario y proyección a los 67', y);
+  doc.setFont('Helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(71, 85, 105);
+  doc.text(doc.splitTextToSize('Las rentas inmobiliarias reducen la brecha mensual de prestaciones y jubilación. Las inversiones inmobiliarias se suman únicamente al patrimonio proyectado a los 67 años.', 178), 14, y + 10);
+
+  const rows = [
+    ['Dinero acumulado', data.accumulatedBank, 'Disponible en banco'],
+    ['Dinero invertido', data.projectedInvested, 'Proyectado hasta los 67 años'],
+    ['Ahorro sistemático', data.projectedSaving, 'Aportaciones acumuladas hasta jubilación'],
+    ['Rentas inmobiliarias', data.projectedRents, 'Rentas mensuales acumuladas hasta los 67'],
+    ['Inversiones inmobiliarias', data.realEstateInvestments, 'Patrimonio inmobiliario declarado'],
+    ['Proyección total a los 67', data.projectedTotal, 'Suma patrimonial ajustada'],
+    ['Brecha jubilación ajustada', data.retirementGap, 'Después de rentas inmobiliarias'],
+  ] as const;
+
+  let rowY = y + 26;
+  rows.forEach(([label, value, note], index) => {
+    const x = index % 2 === 0 ? 14 : 107;
+    if (index % 2 === 0 && index > 0) rowY += 20;
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(226, 232, 240);
+    doc.roundedRect(x, rowY, 84, 15, 2, 2, 'FD');
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(7.1);
+    doc.setTextColor(71, 85, 105);
+    doc.text(label, x + 4, rowY + 5);
+    doc.setFontSize(8.3);
+    doc.setTextColor(15, 23, 42);
+    doc.text(euro(value), x + 80, rowY + 5, { align: 'right' });
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(6.3);
+    doc.setTextColor(100, 116, 139);
+    doc.text(doc.splitTextToSize(note, 74), x + 4, rowY + 10);
+  });
 }
 
 function addChart(doc: jsPDF, chart: ChartCapture, y: number) {
@@ -216,6 +297,8 @@ function addTextBlock(doc: jsPDF, title: string, text: string, startY: number) {
 }
 
 async function generateLiteralPdf() {
+  window.dispatchEvent(new CustomEvent('audit-real-estate-updated'));
+  await new Promise<void>((resolve) => window.setTimeout(resolve, 30));
   const charts = await captureCharts();
   const summaryText = getExecutiveSummaryText();
   const clientName = fieldValue('nombre') || 'cliente';
@@ -226,6 +309,7 @@ async function generateLiteralPdf() {
   header(doc, 'INFORME DE AUDITORÍA DE RIESGOS FINANCIEROS Y PATRIMONIALES');
   addSectionTitle(doc, 'Resumen de datos del cliente', 48);
   addClientSummary(doc, 60);
+  addRealEstateBreakdown(doc, 100);
   footer(doc, page++);
 
   doc.addPage();
