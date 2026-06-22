@@ -36,6 +36,33 @@
         line-height: 1.45;
       }
 
+      .audit-chart-heading {
+        margin: 18px 0 8px;
+        color: #0f172a;
+        font-size: 15px;
+        font-weight: 900;
+        letter-spacing: 0;
+      }
+
+      .audit-chart-axis-labels {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 16px;
+        margin: 8px 0 10px;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .audit-chart-axis-labels span {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        background: #ffffff;
+        padding: 5px 8px;
+      }
+
       .audit-extra-question {
         display: block;
         border: 1px solid #e2e8f0;
@@ -127,6 +154,55 @@
       .audit-extra-result-badge.grave { background: #dc2626; }
       .audit-extra-result-badge.moderada { background: #f97316; }
       .audit-extra-result-badge.leve { background: #16a34a; }
+
+      @media print {
+        .audit-chart-heading {
+          break-after: avoid;
+          page-break-after: avoid;
+          margin-top: 6mm;
+          margin-bottom: 2mm;
+          font-size: 11pt;
+        }
+
+        .audit-chart-axis-labels {
+          break-after: avoid;
+          page-break-after: avoid;
+          margin-bottom: 3mm;
+          font-size: 8pt;
+        }
+
+        main section {
+          break-inside: auto;
+          page-break-inside: auto;
+        }
+
+        main section:has(.audit-previsor-box),
+        .audit-previsor-box {
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+
+        .audit-previsor-box {
+          height: auto !important;
+          min-height: 0 !important;
+          overflow: visible !important;
+          background: #0f172a !important;
+          color: #ffffff !important;
+          border: 2px solid #f97316 !important;
+          border-radius: 8px !important;
+          padding: 5mm !important;
+        }
+
+        .audit-previsor-box * {
+          overflow: visible !important;
+        }
+
+        .audit-previsor-box h3,
+        .audit-previsor-box h4,
+        .audit-previsor-box h5 {
+          color: #f97316 !important;
+        }
+      }
     </style>
   </head>
   <body>
@@ -135,6 +211,26 @@
       (function () {
         const oldIncomeQuestion = "¿Tienes identificado quién sostiene económicamente la unidad familiar?";
         const newIncomeQuestion = "¿Los ingresos de tu familia dependen principalmente de ti?";
+        const chartConfigs = [
+          {
+            match: "auditoría de previsión social",
+            title: "Gráfico de prestaciones públicas estimadas frente a gastos mensuales requeridos",
+            x: "Eje X: contingencias y prestaciones evaluadas",
+            y: "Eje Y: importe mensual en EUR"
+          },
+          {
+            match: "estudio brecha de jubilación",
+            title: "Gráfico de evolución patrimonial, plan de ahorro y capital objetivo de jubilación",
+            x: "Eje X: edad del cliente",
+            y: "Eje Y: capital acumulado en EUR"
+          },
+          {
+            match: "niveles de seguridad y vulnerabilidad",
+            title: "Gráfico hexagonal de seguridad y vulnerabilidad financiera",
+            x: "Ejes radiales: áreas de riesgo evaluadas",
+            y: "Escala: nivel de seguridad de 0 a 100%"
+          }
+        ];
         const extraQuestions = [
           {
             id: "retirementPublicDependency",
@@ -203,6 +299,44 @@
           return Array.from(document.querySelectorAll("main section")).find(function (item) {
             return (item.textContent || "").toLowerCase().includes(needle);
           });
+        }
+
+        function upsertChartTitlesAndAxisLabels() {
+          chartConfigs.forEach(function (config) {
+            const section = findSectionByText(config.match);
+            if (!section) return;
+            const chartHost = section.querySelector(".recharts-responsive-container") || section.querySelector("svg");
+            if (!chartHost) return;
+            const wrapper = chartHost.closest("div") || chartHost;
+
+            let title = section.querySelector('[data-chart-title="' + config.match + '"]');
+            if (!title) {
+              title = document.createElement("h3");
+              title.className = "audit-chart-heading";
+              title.setAttribute("data-chart-title", config.match);
+              wrapper.parentNode.insertBefore(title, wrapper);
+            }
+            title.textContent = config.title;
+
+            let axis = section.querySelector('[data-chart-axis="' + config.match + '"]');
+            if (!axis) {
+              axis = document.createElement("div");
+              axis.className = "audit-chart-axis-labels";
+              axis.setAttribute("data-chart-axis", config.match);
+              wrapper.parentNode.insertBefore(axis, wrapper);
+            }
+            axis.innerHTML = '<span>' + config.x + '</span><span>' + config.y + '</span>';
+          });
+        }
+
+        function markPrevisorBox() {
+          const section = findSectionByText("estudio brecha de jubilación");
+          if (!section) return;
+          const candidates = Array.from(section.querySelectorAll("div"));
+          const box = candidates.find(function (item) {
+            return (item.textContent || "").toLowerCase().includes("estudio previsor: brecha de jubilación hasta los 90 años");
+          });
+          if (box) box.classList.add("audit-previsor-box");
         }
 
         function upsertExtraQuestionnaireItems() {
@@ -339,6 +473,8 @@
           upsertExtraQuestionnaireItems();
           upsertExtraResultBlocks();
           upsertRetirementPensionEstimate();
+          upsertChartTitlesAndAxisLabels();
+          markPrevisorBox();
         }
 
         document.addEventListener("input", function () {
