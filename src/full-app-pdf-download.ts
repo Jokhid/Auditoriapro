@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 
 const FULL_APP_PDF_FLAG = '__auditFullAppPdfDownloadInstalled';
+const CAPTURE_TIMEOUT_MS = 3500;
 
 type CaptureBlock = {
   title: string;
@@ -29,6 +30,19 @@ function fileName(value: string) {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '') || 'cliente';
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string) {
+  return new Promise<T>((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error(message)), ms);
+    promise.then((value) => {
+      window.clearTimeout(timeout);
+      resolve(value);
+    }).catch((error) => {
+      window.clearTimeout(timeout);
+      reject(error);
+    });
+  });
 }
 
 function copyInputState(source: HTMLElement, clone: HTMLElement) {
@@ -112,10 +126,10 @@ function elementToPng(element: HTMLElement): Promise<CaptureBlock> {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><foreignObject width="100%" height="100%">${html}</foreignObject></svg>`;
   const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
 
-  return new Promise((resolve, reject) => {
+  return withTimeout(new Promise<CaptureBlock>((resolve, reject) => {
     const image = new Image();
     image.onload = () => {
-      const scale = 1.5;
+      const scale = 1.25;
       const canvas = document.createElement('canvas');
       canvas.width = Math.ceil(width * scale);
       canvas.height = Math.ceil(height * scale);
@@ -131,7 +145,7 @@ function elementToPng(element: HTMLElement): Promise<CaptureBlock> {
       URL.revokeObjectURL(url);
       resolve({
         title: cleanText(element.querySelector('h1,h2,h3')?.textContent || element.tagName.toLowerCase()),
-        dataUrl: canvas.toDataURL('image/png', 0.96),
+        dataUrl: canvas.toDataURL('image/png', 0.92),
         width: canvas.width,
         height: canvas.height,
       });
@@ -141,16 +155,16 @@ function elementToPng(element: HTMLElement): Promise<CaptureBlock> {
       reject(new Error('No se pudo convertir la sección a imagen.'));
     };
     image.src = url;
-  });
+  }), CAPTURE_TIMEOUT_MS, 'La captura de una sección tardó demasiado.');
 }
 
 function loadImage(src: string) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
+  return withTimeout(new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve(image);
     image.onerror = () => reject(new Error('No se pudo cargar una captura para paginarla.'));
     image.src = src;
-  });
+  }), CAPTURE_TIMEOUT_MS, 'La carga de una captura tardó demasiado.');
 }
 
 function getBlocksToCapture() {
@@ -170,7 +184,11 @@ async function captureApplication() {
   const blocks = getBlocksToCapture();
   const captures: CaptureBlock[] = [];
   for (const block of blocks) {
-    captures.push(await elementToPng(block));
+    try {
+      captures.push(await elementToPng(block));
+    } catch (error) {
+      console.warn('Se omitió una sección del PDF literal:', error);
+    }
   }
   return captures;
 }
@@ -206,7 +224,7 @@ async function addCapture(doc: jsPDF, capture: CaptureBlock, cursorY: number) {
     context.fillStyle = '#ffffff';
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.drawImage(sourceImage, 0, offset, capture.width, currentSliceHeight, 0, 0, capture.width, currentSliceHeight);
-    const sliceUrl = canvas.toDataURL('image/png', 0.96);
+    const sliceUrl = canvas.toDataURL('image/png', 0.92);
     const sliceMmHeight = (currentSliceHeight / capture.width) * usableWidth;
     if (cursorY !== marginBottom) {
       doc.addPage();
@@ -224,9 +242,26 @@ async function addCapture(doc: jsPDF, capture: CaptureBlock, cursorY: number) {
   return cursorY;
 }
 
+function generateFallbackPdf() {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  doc.setFont('Helvetica', 'bold');
+  doc.setFontSize(15);
+  doc.setTextColor(15, 23, 42);
+  doc.text('Informe de auditoría', 14, 22);
+  doc.setFont('Helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(71, 85, 105);
+  const text = cleanText((document.querySelector('main') as HTMLElement | null)?.innerText || 'No se pudo capturar la aplicación visualmente.');
+  doc.text(doc.splitTextToSize(text, 180).slice(0, 55), 14, 36);
+  doc.save(`auditoria-literal-app-${fileName(fieldValue('nombre'))}.pdf`);
+}
+
 async function generateFullAppPdf() {
   const captures = await captureApplication();
-  if (!captures.length) throw new Error('No se encontraron secciones para capturar.');
+  if (!captures.length) {
+    generateFallbackPdf();
+    return;
+  }
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   let cursorY = 10;
@@ -275,7 +310,7 @@ function installFullAppPdfDownload() {
       await generateFullAppPdf();
     } catch (error) {
       console.error(error);
-      window.alert('No se pudo generar la copia literal en PDF. Intenta de nuevo con la página completamente cargada.');
+      generateFallbackPdf();
     } finally {
       setButtonBusy(button, false);
     }
