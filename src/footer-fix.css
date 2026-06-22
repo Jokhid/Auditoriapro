@@ -13,6 +13,11 @@ html body #root main > section:first-of-type select {
   color: #0f172a !important;
 }
 
+html body .audit-chart-heading,
+html body #root .audit-chart-heading {
+  display: none !important;
+}
+
 html body footer,
 html body #root footer,
 html body .print-report-root footer {
@@ -43,6 +48,11 @@ html body footer a:hover {
 }
 
 @media print {
+  html body .audit-chart-heading,
+  html body #root .audit-chart-heading {
+    display: block !important;
+  }
+
   html body header.sticky,
   html body #root header.sticky,
   html body .print-report-root header.sticky {
