@@ -4,7 +4,6 @@ import App from './App.tsx';
 import './index.css';
 import './footer-fix.css';
 import './executive-summary-format.ts';
-import './pdf-report-chart-fix.ts';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
