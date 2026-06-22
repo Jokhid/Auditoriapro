@@ -4,7 +4,7 @@ import App from './App.tsx';
 import './index.css';
 import './footer-fix.css';
 import './executive-summary-format.ts';
-import './pdf-previsor-box-fix.ts';
+import './literal-pdf-download.ts';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
