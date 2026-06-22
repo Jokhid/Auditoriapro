@@ -18,6 +18,11 @@ html body #root .audit-chart-heading {
   display: none !important;
 }
 
+html body [data-chart-axis="niveles de seguridad y vulnerabilidad"],
+html body #root [data-chart-axis="niveles de seguridad y vulnerabilidad"] {
+  display: none !important;
+}
+
 html body footer,
 html body #root footer,
 html body .print-report-root footer {
@@ -51,6 +56,11 @@ html body footer a:hover {
   html body .audit-chart-heading,
   html body #root .audit-chart-heading {
     display: block !important;
+  }
+
+  html body [data-chart-axis="niveles de seguridad y vulnerabilidad"],
+  html body #root [data-chart-axis="niveles de seguridad y vulnerabilidad"] {
+    display: none !important;
   }
 
   html body header.sticky,
