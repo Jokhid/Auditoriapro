@@ -144,6 +144,15 @@ function elementToPng(element: HTMLElement): Promise<CaptureBlock> {
   });
 }
 
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('No se pudo cargar una captura para paginarla.'));
+    image.src = src;
+  });
+}
+
 function getBlocksToCapture() {
   const blocks: HTMLElement[] = [];
   const header = document.querySelector('header') as HTMLElement | null;
@@ -166,7 +175,7 @@ async function captureApplication() {
   return captures;
 }
 
-function addCapture(doc: jsPDF, capture: CaptureBlock, cursorY: number) {
+async function addCapture(doc: jsPDF, capture: CaptureBlock, cursorY: number) {
   const pageWidth = 210;
   const pageHeight = 297;
   const marginX = 10;
@@ -183,10 +192,8 @@ function addCapture(doc: jsPDF, capture: CaptureBlock, cursorY: number) {
     return cursorY + imageHeight + 5;
   }
 
+  const sourceImage = await loadImage(capture.dataUrl);
   const sliceHeightPx = Math.floor((capture.width / usableWidth) * (pageHeight - marginBottom * 2));
-  const image = document.createElement('img');
-  image.src = capture.dataUrl;
-
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
   if (!context) return cursorY;
@@ -198,7 +205,7 @@ function addCapture(doc: jsPDF, capture: CaptureBlock, cursorY: number) {
     canvas.height = currentSliceHeight;
     context.fillStyle = '#ffffff';
     context.fillRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(image, 0, offset, capture.width, currentSliceHeight, 0, 0, capture.width, currentSliceHeight);
+    context.drawImage(sourceImage, 0, offset, capture.width, currentSliceHeight, 0, 0, capture.width, currentSliceHeight);
     const sliceUrl = canvas.toDataURL('image/png', 0.96);
     const sliceMmHeight = (currentSliceHeight / capture.width) * usableWidth;
     if (cursorY !== marginBottom) {
@@ -223,9 +230,9 @@ async function generateFullAppPdf() {
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   let cursorY = 10;
-  captures.forEach((capture) => {
-    cursorY = addCapture(doc, capture, cursorY);
-  });
+  for (const capture of captures) {
+    cursorY = await addCapture(doc, capture, cursorY);
+  }
 
   doc.save(`auditoria-literal-app-${fileName(fieldValue('nombre'))}.pdf`);
 }
