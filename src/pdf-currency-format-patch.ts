@@ -3,7 +3,16 @@ import { jsPDF } from 'jspdf';
 const PDF_CURRENCY_PATCH_FLAG = '__auditPdfCurrencyFormatPatchInstalled';
 
 function numberFromText(value: string) {
-  return Number(String(value || '').replace(/[^0-9.,-]/g, '').replace(',', '.')) || 0;
+  const cleaned = String(value || '').replace(/[^0-9.,-]/g, '');
+  if (!cleaned) return 0;
+  const hasComma = cleaned.includes(',');
+  const hasDot = cleaned.includes('.');
+  const normalized = hasComma
+    ? cleaned.replace(/\./g, '').replace(',', '.')
+    : hasDot && /\.\d{3}(\D|$)/.test(cleaned)
+      ? cleaned.replace(/\./g, '')
+      : cleaned;
+  return Number(normalized) || 0;
 }
 
 function euro(value: number) {
