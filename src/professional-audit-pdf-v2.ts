@@ -11,8 +11,9 @@ const PAGE_H = 297;
 const MARGIN = 14;
 const CONTENT_W = PAGE_W - MARGIN * 2;
 
-type ChartCapture = { title: string; dataUrl: string; width: number; height: number; x: string[]; y: string[] };
+type ChartCapture = { title: string; dataUrl: string; width: number; height: number; x: string[]; y: string[]; explanation: string };
 type Field = { label: string; value: string };
+type AppSection = { heading: string; text: string; explanation: string };
 
 function clean(value: string) {
   return value.replace(/\s+/g, ' ').trim();
@@ -47,11 +48,24 @@ function realEstateData() {
   return typeof win.auditRealEstateData === 'function' ? win.auditRealEstateData() : {} as Record<string, number>;
 }
 
-function getAllSections() {
+function sectionExplanation(heading: string) {
+  const lower = heading.toLowerCase();
+  if (lower.includes('resumen de datos')) return 'Esta sección identifica la situación personal, familiar, económica y patrimonial de partida. Es la base sobre la que se calculan las prestaciones, las brechas de protección y la capacidad real de planificación.';
+  if (lower.includes('objetivos')) return 'Aquí se confrontan los objetivos del cliente con su capacidad real de ahorro. La finalidad es comprobar si los proyectos son viables y qué esfuerzo mensual exigirían.';
+  if (lower.includes('cuestionario')) return 'El cuestionario transforma hábitos, coberturas y preparación familiar en señales de riesgo. Las respuestas permiten detectar vulnerabilidades que no se observan sólo con cifras.';
+  if (lower.includes('previsión social')) return 'Esta sección compara las prestaciones públicas estimadas con el gasto real del hogar. Cuando existen rentas inmobiliarias, se descuentan para medir la brecha económica neta.';
+  if (lower.includes('brecha de jubilación')) return 'El estudio de jubilación proyecta el capital necesario para sostener el nivel de vida hasta los 90 años y lo compara con el patrimonio acumulado previsto.';
+  if (lower.includes('seguridad') || lower.includes('vulnerabilidad')) return 'El mapa de seguridad resume las áreas críticas de protección financiera: liquidez, ingresos, familia, salud, inflación e instrumentos legales.';
+  if (lower.includes('diagnóstico')) return 'El diagnóstico prioriza las deficiencias detectadas y las convierte en medidas concretas de actuación, diferenciando entre riesgos graves, moderados y leves.';
+  if (lower.includes('resumen ejecutivo')) return 'El resumen ejecutivo sintetiza la situación global del cliente y convierte los datos de la auditoría en una lectura profesional y accionable.';
+  return 'Esta sección recoge información introducida o calculada en la aplicación y la incorpora al informe para mantener una visión completa de la auditoría.';
+}
+
+function getAllSections(): AppSection[] {
   return Array.from(document.querySelectorAll('main section')).map((section, index) => {
     const heading = clean((section.querySelector('h2,h1,h3') as HTMLElement | null)?.innerText || `Sección ${index + 1}`);
     const text = clean((section as HTMLElement).innerText.replace(/Descargar informe PDF/gi, ''));
-    return { heading, text };
+    return { heading, text, explanation: sectionExplanation(heading) };
   }).filter((section) => section.text.length > 0);
 }
 
@@ -101,20 +115,35 @@ function tickValues(max: number, percent = false) {
 function chartInfo(sectionName: string) {
   const m = metrics();
   if (sectionName.includes('Auditoría')) {
-    return { title: 'Comparativa gráfica de prestaciones frente a gastos', x: ['Baja laboral', 'Inv. absoluta', 'Inv. profesional', 'Viudedad', 'Orfandad', 'Jubilación'], y: tickValues(Math.max(m.expenses, m.adjustedExpenses, m.base, m.retirementPension, 1)) };
+    return {
+      title: 'Comparativa gráfica de prestaciones frente a gastos',
+      x: ['Baja laboral', 'Inv. absoluta', 'Inv. profesional', 'Viudedad', 'Orfandad', 'Jubilación'],
+      y: tickValues(Math.max(m.expenses, m.adjustedExpenses, m.base, m.retirementPension, 1)),
+      explanation: `El gráfico compara cada prestación estimada con el gasto mensual que debe cubrir el hogar. El gasto declarado es ${euro(m.expenses)} y el gasto ajustado por rentas inmobiliarias es ${euro(m.adjustedExpenses)}.`,
+    };
   }
   if (sectionName.includes('brecha')) {
     const age = m.age || 0;
-    return { title: 'Estudio brecha de jubilación', x: [`${age} años`, `${Math.round((age + 67) / 2)} años`, '67 años', '90 años'], y: tickValues(Math.max(m.targetCapital, m.projectedTotal, 1)) };
+    return {
+      title: 'Estudio brecha de jubilación',
+      x: [`${age} años`, `${Math.round((age + 67) / 2)} años`, '67 años', '90 años'],
+      y: tickValues(Math.max(m.targetCapital, m.projectedTotal, 1)),
+      explanation: `El gráfico proyecta el patrimonio disponible frente al capital objetivo de jubilación. La brecha mensual ajustada es ${euro(m.retirementGap)} y el capital objetivo estimado es ${euro(m.targetCapital)}.`,
+    };
   }
-  return { title: 'Niveles de Seguridad y Vulnerabilidad', x: ['Fondo', 'Baja', 'Familia', 'Sanidad', 'Inflación', 'Legal'], y: tickValues(100, true) };
+  return {
+    title: 'Niveles de Seguridad y Vulnerabilidad',
+    x: ['Fondo', 'Baja', 'Familia', 'Sanidad', 'Inflación', 'Legal'],
+    y: tickValues(100, true),
+    explanation: 'El gráfico resume el nivel de seguridad de las principales áreas de riesgo financiero y patrimonial, facilitando la priorización de acciones correctoras.',
+  };
 }
 
 function prepareSvg(svg: SVGSVGElement) {
   const clone = svg.cloneNode(true) as SVGSVGElement;
   const rect = svg.getBoundingClientRect();
-  const width = Math.max(720, Math.round(rect.width || 900));
-  const height = Math.max(360, Math.round(rect.height || 420));
+  const width = Math.max(760, Math.round(rect.width || 900));
+  const height = Math.max(390, Math.round(rect.height || 440));
   clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   clone.setAttribute('width', String(width));
   clone.setAttribute('height', String(height));
@@ -154,7 +183,7 @@ async function captureChart(sectionName: string): Promise<ChartCapture | null> {
   if (!svg) return null;
   const info = chartInfo(sectionName);
   const image = await svgToPng(svg);
-  return { title: info.title, dataUrl: image.dataUrl, width: image.width, height: image.height, x: info.x, y: info.y };
+  return { title: info.title, dataUrl: image.dataUrl, width: image.width, height: image.height, x: info.x, y: info.y, explanation: info.explanation };
 }
 
 async function captureCharts() {
@@ -176,10 +205,11 @@ function logo(doc: jsPDF, x: number, y: number) {
 }
 
 function header(doc: jsPDF, title: string) {
-  doc.setFillColor(...BLACK); doc.rect(0, 0, 210, 28, 'F'); logo(doc, 12, 5);
-  doc.setFont('Helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(255, 255, 255); doc.text('JOSÉ CARLOS HIDALGO', 38, 11);
-  doc.setFontSize(7.5); doc.setTextColor(...GOLD); doc.text(title, 38, 17);
-  doc.setFont('Helvetica', 'normal'); doc.setFontSize(6.7); doc.setTextColor(255, 255, 255); doc.text('josecarlos@hilolegal.es | 647 50 60 40', 38, 23);
+  doc.setFillColor(255, 255, 255); doc.rect(0, 0, 210, 28, 'F');
+  doc.setDrawColor(226, 232, 240); doc.line(14, 28, 196, 28);
+  doc.setFont('Helvetica', 'bold'); doc.setFontSize(9.2); doc.setTextColor(...BLACK); doc.text('JOSÉ CARLOS HIDALGO', 14, 12);
+  doc.setFont('Helvetica', 'normal'); doc.setFontSize(7.2); doc.setTextColor(...GOLD); doc.text(title, 14, 19);
+  doc.setTextColor(...MUTED); doc.text('josecarlos@hilolegal.es | 647 50 60 40', 142, 12, { align: 'left' });
 }
 
 function footer(doc: jsPDF, page: number) {
@@ -188,13 +218,13 @@ function footer(doc: jsPDF, page: number) {
   doc.text(`Página ${page}`, 196, 285, { align: 'right' });
 }
 
-function newPage(doc: jsPDF, title: string, page: number) {
+function newPage(doc: jsPDF, titleText: string, page: number) {
   if (page > 1) doc.addPage();
-  header(doc, title);
+  header(doc, titleText);
 }
 
-function title(doc: jsPDF, text: string, y: number) {
-  doc.setFont('Helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(...SLATE); doc.text(text, MARGIN, y);
+function title(doc: jsPDF, text: string, y: number, size = 13) {
+  doc.setFont('Helvetica', 'bold'); doc.setFontSize(size); doc.setTextColor(...SLATE); doc.text(text, MARGIN, y);
 }
 
 function paragraph(doc: jsPDF, text: string, x: number, y: number, width = CONTENT_W, size = 8.3) {
@@ -219,17 +249,18 @@ function grid(doc: jsPDF, fields: Field[], x: number, y: number, columns = 2) {
   return y + Math.ceil(fields.length / columns) * (rowHeight + 4);
 }
 
-function textPages(doc: jsPDF, heading: string, body: string, page: number) {
-  newPage(doc, heading.toUpperCase(), page);
-  title(doc, heading, 42);
+function textPages(doc: jsPDF, section: AppSection, page: number) {
+  newPage(doc, section.heading.toUpperCase(), page);
+  title(doc, section.heading, 42);
+  let y = paragraph(doc, section.explanation, 14, 52, 182, 8.2);
+  doc.setDrawColor(...GOLD); doc.line(14, y, 55, y); y += 8;
   doc.setFont('Helvetica', 'normal'); doc.setFontSize(7.7); doc.setTextColor(...MUTED);
-  const lines = doc.splitTextToSize(clean(body), 182) as string[];
-  let y = 54;
+  const lines = doc.splitTextToSize(clean(section.text), 182) as string[];
   let currentPage = page;
   lines.forEach((line) => {
     if (y > 276) {
       footer(doc, currentPage++);
-      doc.addPage(); header(doc, heading.toUpperCase()); y = 42;
+      doc.addPage(); header(doc, section.heading.toUpperCase()); y = 42;
     }
     doc.text(line, 14, y);
     y += 4;
@@ -241,28 +272,46 @@ function textPages(doc: jsPDF, heading: string, body: string, page: number) {
 function chartPage(doc: jsPDF, chart: ChartCapture, page: number) {
   newPage(doc, chart.title.toUpperCase(), page);
   title(doc, chart.title, 42);
+  let y = paragraph(doc, chart.explanation, 14, 52, 182, 8.2);
   doc.setFont('Helvetica', 'bold'); doc.setFontSize(7.3); doc.setTextColor(...MUTED);
-  doc.text(`Eje X: ${chart.x.join(' | ')}`, 14, 51);
-  doc.text(`Eje Y: ${chart.y.join(' | ')}`, 14, 58);
+  doc.text(`Eje X: ${chart.x.join(' | ')}`, 14, y + 2);
+  doc.text(`Eje Y: ${chart.y.join(' | ')}`, 14, y + 9);
+  y += 18;
   const maxW = 182;
-  const maxH = 142;
+  const maxH = 150;
   const ratio = Math.min(maxW / chart.width, maxH / chart.height);
   const w = chart.width * ratio;
   const h = chart.height * ratio;
   const x = 14 + (maxW - w) / 2;
-  doc.setFillColor(255, 255, 255); doc.setDrawColor(226, 232, 240); doc.roundedRect(14, 66, 182, h + 10, 2, 2, 'FD');
-  doc.addImage(chart.dataUrl, 'PNG', x, 71, w, h);
+  doc.setFillColor(255, 255, 255); doc.setDrawColor(226, 232, 240); doc.roundedRect(14, y, 182, h + 10, 2, 2, 'FD');
+  doc.addImage(chart.dataUrl, 'PNG', x, y + 5, w, h);
   footer(doc, page);
   return page + 1;
 }
 
 function cover(doc: jsPDF, clientName: string) {
-  doc.setFillColor(...BLACK); doc.rect(0, 0, 210, 297, 'F'); logo(doc, 18, 22);
-  doc.setFont('Helvetica', 'bold'); doc.setFontSize(27); doc.setTextColor(255, 255, 255); doc.text('INFORME DE AUDITORÍA', 18, 78); doc.setFontSize(22); doc.text('DE RIESGOS FINANCIEROS', 18, 92); doc.text('Y PATRIMONIALES', 18, 106);
-  doc.setDrawColor(...GOLD); doc.setLineWidth(0.8); doc.line(18, 118, 150, 118);
-  doc.setFontSize(12); doc.setTextColor(...GOLD); doc.text('Previsión social, protección familiar y brecha de jubilación', 18, 132);
-  doc.setFont('Helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(255, 255, 255); doc.text(`Cliente: ${clientName}`, 18, 158); doc.text(`Fecha: ${new Date().toLocaleDateString('es-ES')}`, 18, 166);
-  doc.setFont('Helvetica', 'bold'); doc.text('JOSÉ CARLOS HIDALGO', 18, 242); doc.setFont('Helvetica', 'normal'); doc.setFontSize(9); doc.text('Gestión patrimonial e hipotecaria', 18, 250); doc.text('josecarlos@hilolegal.es | 647 50 60 40', 18, 258);
+  doc.setFillColor(255, 255, 255); doc.rect(0, 0, 210, 297, 'F');
+  doc.setDrawColor(...GOLD); doc.setLineWidth(0.8); doc.line(18, 44, 192, 44);
+  doc.setFont('Helvetica', 'bold'); doc.setFontSize(25); doc.setTextColor(...BLACK); doc.text('INFORME DE AUDITORÍA', 18, 76);
+  doc.setFontSize(20); doc.text('DE RIESGOS FINANCIEROS', 18, 91); doc.text('Y PATRIMONIALES', 18, 105);
+  doc.setFont('Helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(...GOLD); doc.text('Previsión social, protección familiar y brecha de jubilación', 18, 123);
+  doc.setTextColor(...SLATE); doc.setFontSize(10.5); doc.text(`Cliente: ${clientName}`, 18, 154); doc.text(`Fecha: ${new Date().toLocaleDateString('es-ES')}`, 18, 164);
+  doc.setFont('Helvetica', 'bold'); doc.setFontSize(11); doc.text('Realizado por José Carlos Hidalgo', 18, 232);
+  doc.setFont('Helvetica', 'normal'); doc.setFontSize(9); doc.text('consultor financiero, hipotecario y patrimonial', 18, 241);
+  doc.setTextColor(...MUTED); doc.text('josecarlos@hilolegal.es | 647 50 60 40', 18, 251);
+}
+
+function executiveParagraphs(sections: AppSection[]) {
+  const m = metrics();
+  const map = (needle: string) => sections.find((section) => section.heading.toLowerCase().includes(needle))?.text || '';
+  return [
+    `Datos del cliente. La auditoría parte de una fotografía económica y familiar que permite evaluar ingresos, gastos, base de cotización, situación familiar, patrimonio líquido e inversiones. Con un gasto mensual declarado de ${euro(m.expenses)} y un gasto ajustado por rentas de ${euro(m.adjustedExpenses)}, el informe diferencia entre necesidad bruta y necesidad real de cobertura.`,
+    `Objetivos. Los objetivos a medio y largo plazo deben contrastarse con la capacidad de ahorro disponible. Cuando el esfuerzo mensual requerido supera la capacidad real, conviene reordenar plazos, priorizar proyectos y evitar que la planificación dependa de decisiones improvisadas. ${clean(map('objetivos')).slice(0, 260)}`,
+    `Previsión social. La comparación entre prestaciones públicas y gastos muestra si una baja laboral, invalidez, viudedad, orfandad o jubilación dejaría una brecha mensual. Las rentas inmobiliarias reducen esa brecha, pero no sustituyen la necesidad de revisar capitales asegurados y protección de ingresos.`,
+    `Jubilación. La pensión estimada es de ${euro(m.retirementPension)} al mes y la brecha de jubilación ajustada es de ${euro(m.retirementGap)} al mes. Para sostener el nivel de vida hasta los 90 años, el capital objetivo estimado asciende a ${euro(m.targetCapital)}, frente a una proyección patrimonial a los 67 años de ${euro(m.projectedTotal)}.`,
+    `Seguridad y vulnerabilidad. El análisis de seguridad permite detectar si el patrimonio está protegido ante contingencias personales, familiares, sanitarias, legales o de inflación. Las áreas con menor puntuación deben abordarse antes de asumir nuevos riesgos financieros.`,
+    `Diagnóstico y recomendaciones. Las medidas prioritarias deben centrarse en cubrir brechas graves, reforzar liquidez, ordenar ahorro e inversión, revisar beneficiarios y documentación legal, y diseñar una estrategia de jubilación que combine ahorro sistemático, inversión y rentas patrimoniales de forma coherente.`,
+  ];
 }
 
 async function generatePdf() {
@@ -270,6 +319,7 @@ async function generatePdf() {
   await new Promise<void>((resolve) => window.setTimeout(resolve, 120));
   const clientName = fieldValue('nombre') || 'Cliente';
   const charts = await captureCharts();
+  const sections = getAllSections();
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   let page = 1;
 
@@ -291,14 +341,17 @@ async function generatePdf() {
   footer(doc, page++);
 
   charts.forEach((chart) => { page = chartPage(doc, chart, page); });
+  sections.forEach((section) => { page = textPages(doc, section, page); });
 
-  getAllSections().forEach((section) => {
-    page = textPages(doc, section.heading, section.text, page);
-  });
+  newPage(doc, 'RESUMEN EJECUTIVO', page);
+  title(doc, 'Resumen ejecutivo y recomendaciones', 42);
+  y = 54;
+  executiveParagraphs(sections).forEach((text) => { y = paragraph(doc, text, 14, y, 182, 8.2); y += 2; });
+  footer(doc, page++);
 
   newPage(doc, 'CONCLUSIÓN PROFESIONAL', page);
   title(doc, 'Cierre y próximos pasos', 42);
-  paragraph(doc, 'El valor del informe reside en convertir los datos personales y patrimoniales en decisiones concretas: proteger ingresos, corregir brechas, ordenar liquidez, revisar coberturas familiares, planificar jubilación y estructurar correctamente el patrimonio. Las áreas con mayor vulnerabilidad deben revisarse personalmente para transformar este diagnóstico en un plan de acción ejecutable.', 14, 54, 182, 8.5);
+  paragraph(doc, 'Este informe está diseñado para servir como herramienta de decisión. El siguiente paso recomendable es convertir el diagnóstico en un plan de acción concreto: revisar coberturas, capitales asegurados, estructura de ahorro, estrategia de inversión, planificación de jubilación y documentación legal familiar. La finalidad no es sólo conocer el riesgo, sino reducirlo de forma ordenada y medible.', 14, 54, 182, 8.5);
   footer(doc, page);
   doc.save(`informe-auditoria-profesional-${slug(clientName)}.pdf`);
 }
