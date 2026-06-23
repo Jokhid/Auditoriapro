@@ -17,7 +17,7 @@ const W = 182;
 type Field = { label: string; value: string; note?: string };
 type Benefit = { label: string; value: number; gap: number };
 type ProjectRow = { name: string; target: number; years: number; monthly: number; status: string };
-type QuestionRow = { label: string; title: string; answer: string };
+type QuestionRow = { label: string; title: string; answer: string; explanation: string };
 type PageState = { page: number; y: number; title: string };
 type Metrics = ReturnType<typeof collectMetrics>;
 
@@ -126,7 +126,12 @@ function collectQuestionRows(): QuestionRow[] {
     const select = card.querySelector('select') as HTMLSelectElement | null;
     if (!select) return null;
     const spans = Array.from(card.querySelectorAll('span')).map((span) => clean(span.textContent || '')).filter(Boolean);
-    return { label: spans[0] || 'Pregunta', title: spans[1] || clean(card.textContent || ''), answer: clean(select.value || 'No indicado') };
+    return {
+      label: spans[0] || 'Pregunta',
+      title: spans[1] || clean(card.textContent || ''),
+      explanation: spans[2] || 'Permite identificar una posible vulnerabilidad y priorizar medidas de protección financiera.',
+      answer: clean(select.value || 'No indicado'),
+    };
   }).filter(Boolean) as QuestionRow[];
 }
 function appScores(m: Metrics) {
@@ -227,15 +232,19 @@ function drawObjectivesTable(doc: jsPDF, state: PageState, projects: ProjectRow[
 }
 function drawQuestionCards(doc: jsPDF, state: PageState, questions: QuestionRow[]) {
   heading(doc, state, 'Cuestionario completo de auditoría');
-  paragraph(doc, state, 'Cada tarjeta muestra la pregunta evaluada y únicamente la respuesta seleccionada en el test, para que el informe sea claro y fácil de revisar con el cliente.'); rule(doc, state);
+  rule(doc, state);
   questions.forEach((q) => {
-    const lines = doc.splitTextToSize(q.title, 132) as string[]; ensure(doc, state, Math.max(18, lines.length * 4 + 14));
-    doc.setFillColor(...LIGHT); doc.setDrawColor(...BORDER); doc.roundedRect(M, state.y, W, Math.max(18, lines.length * 4 + 12), 3, 3, 'FD');
+    const questionLines = doc.splitTextToSize(q.title, 132) as string[];
+    const explanationLines = doc.splitTextToSize(`Por qué esta pregunta es importante: ${q.explanation}`, 132) as string[];
+    const cardH = Math.max(25, questionLines.length * 4 + explanationLines.length * 3.5 + 15);
+    ensure(doc, state, cardH + 4);
+    doc.setFillColor(...LIGHT); doc.setDrawColor(...BORDER); doc.roundedRect(M, state.y, W, cardH, 3, 3, 'FD');
     doc.setFont('Helvetica', 'bold'); doc.setFontSize(6.8); doc.setTextColor(...GOLD); doc.text(q.label.toUpperCase(), M + 4, state.y + 6);
-    doc.setFont('Helvetica', 'normal'); doc.setFontSize(7.8); doc.setTextColor(...SLATE); doc.text(lines, M + 4, state.y + 12);
+    doc.setFont('Helvetica', 'normal'); doc.setFontSize(7.8); doc.setTextColor(...SLATE); doc.text(questionLines, M + 4, state.y + 12);
+    doc.setFont('Helvetica', 'normal'); doc.setFontSize(6.8); doc.setTextColor(...MUTED); doc.text(explanationLines, M + 4, state.y + 12 + questionLines.length * 4 + 3);
     doc.setFillColor(255, 255, 255); doc.setDrawColor(...GOLD); doc.roundedRect(158, state.y + 5, 34, 9, 2, 2, 'FD');
     doc.setFont('Helvetica', 'bold'); doc.setFontSize(7.2); doc.setTextColor(...SLATE); doc.text(q.answer, 175, state.y + 11, { align: 'center' });
-    state.y += Math.max(18, lines.length * 4 + 12) + 4;
+    state.y += cardH + 4;
   });
 }
 function axis(doc: jsPDF, x: number, y: number, w: number, h: number, max: number, xLabels: string[], percentAxis = false) {
