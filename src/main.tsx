@@ -6,6 +6,7 @@ import './footer-fix.css';
 import './executive-summary-format.ts';
 import './real-estate-adjustments.ts';
 import './real-estate-metric-sync.ts';
+import './benefit-rate-labels.ts';
 import './professional-audit-pdf-v3.ts';
 
 createRoot(document.getElementById('root')!).render(
