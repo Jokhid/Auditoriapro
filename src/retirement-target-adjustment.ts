@@ -57,9 +57,7 @@ function retirementTargetCapital() {
 
 function impliedPdfMonthlyGap() {
   const target = retirementTargetCapital();
-  const { yearsTo90 } = retirementTimeline();
-  const monthsTo90 = Math.max(1, yearsTo90 * 12);
-  return target / monthsTo90;
+  return target / (23 * 12);
 }
 
 function updateMetricCard(labelText: string, value: string) {
