@@ -1,4 +1,5 @@
 const RETIREMENT_TARGET_FLAG = '__auditRetirementTargetAdjustmentInstalled';
+const PDF_TARGET_FLAG = '__auditPdfRetirementTargetActive';
 
 function cleanText(value: string) {
   return String(value || '').replace(/\s+/g, ' ').trim();
@@ -37,16 +38,28 @@ function estimatedRetirementPension() {
   return base * rate;
 }
 
-function retirementTargetCapital() {
+function retirementTimeline() {
   const age = fieldNumber('edad');
-  const ordinaryExpenses = fieldNumber('gastos mensuales');
-  const mortgagePayment = fieldNumber('alquiler, hipoteca y préstamos');
-  const pension = estimatedRetirementPension();
   const retirementStartAge = Math.max(67, age);
   const yearsTo90 = Math.max(0, 90 - retirementStartAge);
   const mortgageYearsTo75 = Math.max(0, Math.min(75, 90) - retirementStartAge);
+  return { retirementStartAge, yearsTo90, mortgageYearsTo75 };
+}
+
+function retirementTargetCapital() {
+  const ordinaryExpenses = fieldNumber('gastos mensuales');
+  const mortgagePayment = fieldNumber('alquiler, hipoteca y préstamos');
+  const pension = estimatedRetirementPension();
+  const { yearsTo90, mortgageYearsTo75 } = retirementTimeline();
   const ordinaryGap = Math.max(0, ordinaryExpenses - pension);
   return ordinaryGap * 12 * yearsTo90 + mortgagePayment * 12 * mortgageYearsTo75;
+}
+
+function impliedPdfMonthlyGap() {
+  const target = retirementTargetCapital();
+  const { yearsTo90 } = retirementTimeline();
+  const monthsTo90 = Math.max(1, yearsTo90 * 12);
+  return target / monthsTo90;
 }
 
 function updateMetricCard(labelText: string, value: string) {
@@ -70,11 +83,32 @@ function updateRetirementTargetDisplay() {
   });
 }
 
+function wrapRealEstateDataForPdf(win: typeof window & { auditRealEstateData?: () => Record<string, number>; [PDF_TARGET_FLAG]?: boolean }) {
+  if (typeof win.auditRealEstateData !== 'function') return;
+  const original = win.auditRealEstateData;
+  win.auditRealEstateData = () => {
+    const data = original();
+    if (!win[PDF_TARGET_FLAG]) return data;
+    return { ...data, retirementGap: impliedPdfMonthlyGap() };
+  };
+}
+
+function markPdfGeneration(target: EventTarget | null) {
+  const element = target instanceof Element ? target : null;
+  const button = element?.closest('button');
+  if (!button || !/descargar.*pdf|descargar informe pdf|descargar auditoría/i.test(button.textContent || '')) return;
+  const win = window as typeof window & { [PDF_TARGET_FLAG]?: boolean };
+  win[PDF_TARGET_FLAG] = true;
+  window.setTimeout(() => { win[PDF_TARGET_FLAG] = false; }, 8000);
+}
+
 function installRetirementTargetAdjustment() {
-  const win = window as typeof window & { [RETIREMENT_TARGET_FLAG]?: boolean; auditRetirementTargetCapital?: () => number };
+  const win = window as typeof window & { [RETIREMENT_TARGET_FLAG]?: boolean; auditRetirementTargetCapital?: () => number; auditRealEstateData?: () => Record<string, number>; [PDF_TARGET_FLAG]?: boolean };
   if (win[RETIREMENT_TARGET_FLAG]) return;
   win[RETIREMENT_TARGET_FLAG] = true;
   win.auditRetirementTargetCapital = retirementTargetCapital;
+  wrapRealEstateDataForPdf(win);
+  document.addEventListener('click', (event) => markPdfGeneration(event.target), true);
   document.addEventListener('input', () => window.setTimeout(updateRetirementTargetDisplay, 120));
   document.addEventListener('change', () => window.setTimeout(updateRetirementTargetDisplay, 120));
   window.addEventListener('load', updateRetirementTargetDisplay);
