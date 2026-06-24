@@ -9,6 +9,7 @@ import './real-estate-metric-sync.ts';
 import './benefit-rate-labels.ts';
 import './retirement-target-adjustment.ts';
 import './pdf-currency-format-patch.ts';
+import './pdf-logo-size-patch.ts';
 import './professional-audit-pdf-v3.ts';
 
 createRoot(document.getElementById('root')!).render(
