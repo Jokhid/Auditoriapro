@@ -8,22 +8,22 @@ function near(value: unknown, expected: number) {
 
 function scaledHeaderRect(args: unknown[]) {
   const [x, y, w, h, style] = args;
-  if (near(x, 14) && near(y, 7) && near(w, 3) && near(h, 17)) return [14, 9, 1.5, 8.5, style];
-  if (near(x, 32) && near(y, 7) && near(w, 3) && near(h, 17)) return [23, 9, 1.5, 8.5, style];
-  if (near(x, 23) && near(y, 7) && near(w, 3) && near(h, 7)) return [18.5, 9, 1.5, 3.5, style];
-  if (near(x, 23) && near(y, 17) && near(w, 3) && near(h, 7)) return [18.5, 14, 1.5, 3.5, style];
+  if (near(x, 14) && near(y, 7) && near(w, 3) && near(h, 17)) return [14, 10.5, 1.125, 6.375, style];
+  if (near(x, 32) && near(y, 7) && near(w, 3) && near(h, 17)) return [20.75, 10.5, 1.125, 6.375, style];
+  if (near(x, 23) && near(y, 7) && near(w, 3) && near(h, 7)) return [17.375, 10.5, 1.125, 2.625, style];
+  if (near(x, 23) && near(y, 17) && near(w, 3) && near(h, 7)) return [17.375, 14.25, 1.125, 2.625, style];
   return args;
 }
 
 function scaledHeaderCircle(args: unknown[]) {
   const [x, y, r, style] = args;
-  if (near(x, 24.5) && near(y, 15.5) && near(r, 4.4)) return [19.25, 13.25, 2.2, style];
+  if (near(x, 24.5) && near(y, 15.5) && near(r, 4.4)) return [17.94, 13.69, 1.65, style];
   return args;
 }
 
 function shiftedHeaderText(args: unknown[]) {
   const [text, x, y, options] = args;
-  if (near(x, 42) && (near(y, 11) || near(y, 19) || near(y, 26))) return [text, 31, y, options];
+  if (near(x, 42) && (near(y, 11) || near(y, 19) || near(y, 26))) return [text, 28, y, options];
   return args;
 }
 
