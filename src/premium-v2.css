@@ -1,0 +1,40 @@
+.premium-v2 main > section:first-of-type {
+  background: transparent !important;
+  color: inherit !important;
+  border-radius: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  margin-top: 0 !important;
+  padding: 0 !important;
+}
+
+.premium-v2 main > section:first-of-type h2,
+.premium-v2 main > section:first-of-type p,
+.premium-v2 main > section:first-of-type span,
+.premium-v2 main > section:first-of-type div {
+  color: inherit;
+}
+
+.premium-v2 section {
+  break-inside: avoid;
+}
+
+.premium-v2 input,
+.premium-v2 select,
+.premium-v2 button {
+  outline-color: #C5A566;
+}
+
+.premium-v2 .recharts-cartesian-axis-tick-value {
+  font-size: 11px;
+}
+
+.premium-v2 header.sticky {
+  min-height: auto !important;
+  display: block !important;
+  align-items: initial !important;
+}
+
+.premium-v2 footer {
+  margin-top: 2.5rem !important;
+}
