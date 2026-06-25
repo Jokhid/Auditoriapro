@@ -1,21 +1,25 @@
 import { jsPDF } from 'jspdf';
 
 const FLAG = '__auditFullWidthTextPatchInstalled';
-const FULL_WIDTH = 194;
+const FULL_WIDTH = 260;
 
 const targetFragments = [
-  'El resumen inicial ordena los datos personales',
-  'Los objetivos se ordenan por proyecto',
-  'Esta sección cuantifica el impacto de cada contingencia',
-  'El estudio de jubilación estima la diferencia',
-  'El gráfico refleja la proyección patrimonial',
-  'La lectura de seguridad sintetiza la robustez',
-  'El diagnóstico prioriza las medidas según gravedad',
-  'Situación de partida. La auditoría muestra una seguridad global',
+  'el resumen inicial ordena los datos personales',
+  'los objetivos se ordenan por proyecto',
+  'esta seccion cuantifica el impacto de cada contingencia',
+  'el estudio de jubilacion estima la diferencia',
+  'el grafico refleja la proyeccion patrimonial',
+  'la lectura de seguridad sintetiza la robustez',
+  'el diagnostico prioriza las medidas segun gravedad',
+  'situacion de partida la auditoria muestra una seguridad global',
 ];
 
 function normalize(value: unknown) {
   return String(Array.isArray(value) ? value.join(' ') : value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -34,7 +38,7 @@ if (!api[FLAG] && typeof api.splitTextToSize === 'function') {
   const originalSplitTextToSize = api.splitTextToSize;
   api[FLAG] = true;
   api.splitTextToSize = function patchedSplitTextToSize(this: jsPDF, text: unknown, maxlen: number, options?: unknown) {
-    const width = shouldUseFullWidth(text) ? Math.max(maxlen || 0, FULL_WIDTH) : maxlen;
+    const width = shouldUseFullWidth(text) ? FULL_WIDTH : maxlen;
     return originalSplitTextToSize.call(this, text, width, options);
   };
 }
