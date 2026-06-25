@@ -43,7 +43,7 @@ function premiumClosingLines() {
     '',
     '                         JOSÉ CARLOS HIDALGO',
     '                         Teléfono: 647 50 60 40',
-    '                         Email: josecarlos@hilolegal.es.',
+    '                         Email: josecarlos@hilolegal.es',
     '',
     'El objetivo es ayudarle a corregir las debilidades detectadas, reforzar su protección familiar',
     'y construir un plan financiero más sólido, claro y adaptado a su realidad.',
