@@ -10,8 +10,8 @@ import './benefit-rate-labels.ts';
 import './retirement-target-adjustment.ts';
 import './pdf-currency-format-patch.ts';
 import './pdf-logo-size-patch.ts';
-import './professional-audit-pdf-v3.ts';
 import './pdf-full-width-text-patch.ts';
+import './professional-audit-pdf-v3.ts';
 import './executive-priority-map-patch.ts';
 import './v2-header-footer-patch.ts';
 
