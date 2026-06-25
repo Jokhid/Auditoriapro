@@ -2,29 +2,50 @@ import { jsPDF } from 'jspdf';
 
 const PDF_LOGO_SIZE_PATCH_FLAG = '__auditPdfLogoSizePatchInstalled';
 
+type PdfDoc = jsPDF & {
+  __auditLogoPatchApplied?: boolean;
+  rect: (...args: unknown[]) => unknown;
+  circle: (...args: unknown[]) => unknown;
+  text: (...args: unknown[]) => unknown;
+};
+
 function near(value: unknown, expected: number) {
   return Math.abs(Number(value) - expected) < 0.01;
 }
 
 function scaledHeaderRect(args: unknown[]) {
   const [x, y, w, h, style] = args;
-  if (near(x, 14) && near(y, 7) && near(w, 3) && near(h, 17)) return [17.45, 13.28, 0.14, 0.8, style];
-  if (near(x, 32) && near(y, 7) && near(w, 3) && near(h, 17)) return [18.3, 13.28, 0.14, 0.8, style];
-  if (near(x, 23) && near(y, 7) && near(w, 3) && near(h, 7)) return [17.88, 13.28, 0.14, 0.33, style];
-  if (near(x, 23) && near(y, 17) && near(w, 3) && near(h, 7)) return [17.88, 13.75, 0.14, 0.33, style];
+  if (near(x, 14) && near(y, 7) && near(w, 3) && near(h, 17)) return [14, 10.5, 0.75, 4.25, style];
+  if (near(x, 32) && near(y, 7) && near(w, 3) && near(h, 17)) return [18.5, 10.5, 0.75, 4.25, style];
+  if (near(x, 23) && near(y, 7) && near(w, 3) && near(h, 7)) return [16.25, 10.5, 0.75, 1.75, style];
+  if (near(x, 23) && near(y, 17) && near(w, 3) && near(h, 7)) return [16.25, 13, 0.75, 1.75, style];
   return args;
 }
 
 function scaledHeaderCircle(args: unknown[]) {
   const [x, y, r, style] = args;
-  if (near(x, 24.5) && near(y, 15.5) && near(r, 4.4)) return [17.94, 13.69, 0.21, style];
+  if (near(x, 24.5) && near(y, 15.5) && near(r, 4.4)) return [16.63, 12.63, 1.1, style];
   return args;
 }
 
 function shiftedHeaderText(args: unknown[]) {
   const [text, x, y, options] = args;
-  if (near(x, 42) && (near(y, 11) || near(y, 19) || near(y, 26))) return [text, 22, y, options];
+  if (near(x, 42) && (near(y, 11) || near(y, 19) || near(y, 26))) return [text, 24, y, options];
   return args;
+}
+
+function patchDocument(doc: PdfDoc) {
+  if (doc.__auditLogoPatchApplied) return;
+  doc.__auditLogoPatchApplied = true;
+
+  const originalRect = doc.rect.bind(doc);
+  doc.rect = (...args: unknown[]) => originalRect(...scaledHeaderRect(args));
+
+  const originalCircle = doc.circle.bind(doc);
+  doc.circle = (...args: unknown[]) => originalCircle(...scaledHeaderCircle(args));
+
+  const originalText = doc.text.bind(doc);
+  doc.text = (...args: unknown[]) => originalText(...shiftedHeaderText(args));
 }
 
 function installPdfLogoSizePatch() {
@@ -32,32 +53,9 @@ function installPdfLogoSizePatch() {
   if (win[PDF_LOGO_SIZE_PATCH_FLAG]) return;
   win[PDF_LOGO_SIZE_PATCH_FLAG] = true;
 
-  const api = jsPDF.API as typeof jsPDF.API & {
-    rect?: (...args: unknown[]) => unknown;
-    circle?: (...args: unknown[]) => unknown;
-    text?: (...args: unknown[]) => unknown;
-  };
-
-  const originalRect = api.rect;
-  if (typeof originalRect === 'function') {
-    api.rect = function patchedRect(this: unknown, ...args: unknown[]) {
-      return originalRect.apply(this, scaledHeaderRect(args));
-    };
-  }
-
-  const originalCircle = api.circle;
-  if (typeof originalCircle === 'function') {
-    api.circle = function patchedCircle(this: unknown, ...args: unknown[]) {
-      return originalCircle.apply(this, scaledHeaderCircle(args));
-    };
-  }
-
-  const originalText = api.text;
-  if (typeof originalText === 'function') {
-    api.text = function patchedText(this: unknown, ...args: unknown[]) {
-      return originalText.apply(this, shiftedHeaderText(args));
-    };
-  }
+  const api = jsPDF.API as typeof jsPDF.API & { events?: Array<[string, (...args: unknown[]) => void]> };
+  if (!Array.isArray(api.events)) api.events = [];
+  api.events.push(['initialized', function onPdfInitialized(this: PdfDoc) { patchDocument(this); }]);
 }
 
 installPdfLogoSizePatch();
