@@ -1,19 +1,11 @@
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
-import App from './App.tsx';
+import PremiumAuditV2 from './PremiumAuditV2.tsx';
 import './index.css';
-import './footer-fix.css';
-import './executive-summary-format.ts';
-import './real-estate-adjustments.ts';
-import './real-estate-metric-sync.ts';
-import './benefit-rate-labels.ts';
-import './retirement-target-adjustment.ts';
-import './pdf-currency-format-patch.ts';
-import './pdf-logo-size-patch.ts';
-import './professional-audit-pdf-v3.ts';
+import './premium-v2.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <PremiumAuditV2 />
   </StrictMode>,
 );
