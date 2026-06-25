@@ -1,5 +1,3 @@
-import { jsPDF } from "jspdf";
-
 type PriorityTone = "grave" | "moderada" | "leve";
 type PriorityItem = {
   priority: string;
@@ -152,70 +150,4 @@ function installDomPatch() {
   observer.observe(document.body, { childList: true, subtree: true });
 }
 
-function addPriorityMapToPdf(doc: jsPDF) {
-  const pageHeight = 297;
-  const margin = 14;
-  let y = 176;
-
-  doc.setFont("Helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(17, 24, 39);
-  doc.text("Mapa de prioridades", margin, y);
-  y += 7;
-
-  doc.setFont("Helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(17, 24, 39);
-  const lead = doc.splitTextToSize("Síntesis final de actuación para transformar el diagnóstico en decisiones concretas, ordenadas por urgencia y efecto patrimonial.", 178);
-  doc.text(lead, margin, y);
-  y += lead.length * 4 + 4;
-
-  priorityItems.forEach((item, index) => {
-    if (y > pageHeight - 38) {
-      doc.addPage();
-      y = 24;
-    }
-    const x = index % 2 === 0 ? margin : 106;
-    const cardY = y;
-    const cardW = 88;
-    const cardH = 30;
-    if (index % 2 === 0 && index > 0) y += cardH + 5;
-
-    doc.setDrawColor(226, 232, 240);
-    doc.setFillColor(248, 250, 252);
-    doc.roundedRect(x, cardY, cardW, cardH, 2, 2, "FD");
-    const color = toneColor(item.tone);
-    const rgb = color.match(/\w\w/g)?.map((part) => parseInt(part, 16)) ?? [17, 24, 39];
-    doc.setFillColor(rgb[0], rgb[1], rgb[2]);
-    doc.rect(x, cardY, 1.8, cardH, "F");
-
-    doc.setFont("Helvetica", "bold");
-    doc.setFontSize(6.8);
-    doc.setTextColor(17, 24, 39);
-    doc.text(`Prioridad ${item.priority}`, x + 5, cardY + 6);
-    doc.setFontSize(7.8);
-    doc.text(doc.splitTextToSize(item.title, cardW - 10), x + 5, cardY + 12);
-    doc.setFont("Helvetica", "normal");
-    doc.setFontSize(6.7);
-    doc.setTextColor(17, 24, 39);
-    doc.text(doc.splitTextToSize(item.description, cardW - 10).slice(0, 3), x + 5, cardY + 20);
-  });
-}
-
-function installPdfPatch() {
-  const api = jsPDF.API as unknown as { save?: (...args: unknown[]) => unknown; __priorityMapPatch?: boolean };
-  if (api.__priorityMapPatch) return;
-  const originalSave = new jsPDF().save as unknown as (...args: unknown[]) => unknown;
-  api.__priorityMapPatch = true;
-  api.save = function patchedSave(this: jsPDF, ...args: unknown[]) {
-    try {
-      addPriorityMapToPdf(this);
-    } catch (error) {
-      console.warn("No se pudo añadir el mapa de prioridades al PDF", error);
-    }
-    return originalSave.apply(this, args);
-  };
-}
-
 installDomPatch();
-installPdfPatch();
