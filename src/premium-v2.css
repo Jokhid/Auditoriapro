@@ -15,24 +15,86 @@
   color: inherit;
 }
 
-.premium-v2 main > section:first-of-type > div:nth-child(2),
-.premium-v2 main > section:first-of-type > div:nth-child(2) h3,
-.premium-v2 main > section:first-of-type > div:nth-child(2) h4,
-.premium-v2 main > section:first-of-type > div:nth-child(2) p,
-.premium-v2 main > section:first-of-type > div:nth-child(2) span,
-.premium-v2 main > section:first-of-type > div:nth-child(2) strong {
-  color: #111827 !important;
-  text-shadow: none !important;
+.premium-v2 .priority-map,
+.premium-v2 .priority-map div,
+.premium-v2 .priority-map p {
+  color: #0f172a !important;
 }
 
-.premium-v2 main > section:first-of-type > div:nth-child(2) [class*="bg-red"],
-.premium-v2 main > section:first-of-type > div:nth-child(2) [class*="bg-orange"],
-.premium-v2 main > section:first-of-type > div:nth-child(2) [class*="bg-emerald"] {
-  color: #111827 !important;
+.premium-v2 .priority-map p:not(:first-child) {
+  color: #334155 !important;
+}
+
+.premium-v2 .priority-map span[class*="bg-"] {
+  color: #ffffff !important;
+}
+
+.premium-v2 .client-data-grid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  align-items: start;
+}
+
+.premium-v2 .client-data-grid label {
+  min-width: 0;
+}
+
+.premium-v2 .client-data-grid label > span {
+  min-height: 2.35rem;
+  display: flex !important;
+  align-items: flex-end;
+  white-space: normal;
+  line-height: 1.15;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+.premium-v2 .client-data-grid input,
+.premium-v2 .client-data-grid select {
+  min-height: 2.6rem;
 }
 
 .premium-v2 section {
   break-inside: avoid;
+}
+
+.premium-v2 .section-content {
+  min-width: 0;
+}
+
+.premium-v2 .metric-value,
+.premium-v2 table,
+.premium-v2 p,
+.premium-v2 span {
+  overflow-wrap: anywhere;
+}
+
+.premium-v2 .chart-frame {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.premium-v2 .security-radar-frame {
+  min-height: 28rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.premium-v2 .security-radar-canvas {
+  width: 430px;
+  height: 100%;
+  min-width: 430px;
+}
+
+.premium-v2 .recharts-wrapper,
+.premium-v2 .recharts-surface {
+  overflow: visible;
+}
+
+.premium-v2 .recharts-polar-angle-axis-tick-value {
+  paint-order: stroke;
+  stroke: #f8fafc;
+  stroke-width: 4px;
+  font-weight: 700;
 }
 
 .premium-v2 input,
@@ -43,6 +105,25 @@
 
 .premium-v2 .recharts-cartesian-axis-tick-value {
   font-size: 11px;
+}
+
+@media (max-width: 900px) {
+  .premium-v2 main {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .premium-v2 section {
+    padding: 1.25rem !important;
+  }
+
+  .premium-v2 .section-content {
+    padding-left: 0 !important;
+  }
+
+  .premium-v2 .security-radar-frame {
+    min-height: 24rem;
+  }
 }
 
 .premium-v2 header.sticky {
