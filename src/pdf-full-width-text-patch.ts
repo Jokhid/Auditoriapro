@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 
 const FLAG = '__auditFullWidthTextPatchInstalled';
-const FULL_WIDTH = 178;
+const FULL_WIDTH = 194;
 
 const targetFragments = [
   'El resumen inicial ordena los datos personales',
