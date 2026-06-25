@@ -15,16 +15,16 @@ function near(value: unknown, expected: number) {
 
 function scaledHeaderRect(args: unknown[]) {
   const [x, y, w, h, style] = args;
-  if (near(x, 14) && near(y, 7) && near(w, 3) && near(h, 17)) return [14, 10.5, 0.75, 4.25, style];
-  if (near(x, 32) && near(y, 7) && near(w, 3) && near(h, 17)) return [18.5, 10.5, 0.75, 4.25, style];
-  if (near(x, 23) && near(y, 7) && near(w, 3) && near(h, 7)) return [16.25, 10.5, 0.75, 1.75, style];
-  if (near(x, 23) && near(y, 17) && near(w, 3) && near(h, 7)) return [16.25, 13, 0.75, 1.75, style];
+  if (near(x, 14) && near(y, 7) && near(w, 3) && near(h, 17)) return [14, 8.8, 0.75, 4.25, style];
+  if (near(x, 32) && near(y, 7) && near(w, 3) && near(h, 17)) return [18.5, 8.8, 0.75, 4.25, style];
+  if (near(x, 23) && near(y, 7) && near(w, 3) && near(h, 7)) return [16.25, 8.8, 0.75, 1.75, style];
+  if (near(x, 23) && near(y, 17) && near(w, 3) && near(h, 7)) return [16.25, 11.3, 0.75, 1.75, style];
   return args;
 }
 
 function scaledHeaderCircle(args: unknown[]) {
   const [x, y, r, style] = args;
-  if (near(x, 24.5) && near(y, 15.5) && near(r, 4.4)) return [16.63, 12.63, 1.1, style];
+  if (near(x, 24.5) && near(y, 15.5) && near(r, 4.4)) return [16.63, 10.93, 1.1, style];
   return args;
 }
 
