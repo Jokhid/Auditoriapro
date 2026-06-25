@@ -15,6 +15,22 @@
   color: inherit;
 }
 
+.premium-v2 main > section:first-of-type > div:nth-child(2),
+.premium-v2 main > section:first-of-type > div:nth-child(2) h3,
+.premium-v2 main > section:first-of-type > div:nth-child(2) h4,
+.premium-v2 main > section:first-of-type > div:nth-child(2) p,
+.premium-v2 main > section:first-of-type > div:nth-child(2) span,
+.premium-v2 main > section:first-of-type > div:nth-child(2) strong {
+  color: #111827 !important;
+  text-shadow: none !important;
+}
+
+.premium-v2 main > section:first-of-type > div:nth-child(2) [class*="bg-red"],
+.premium-v2 main > section:first-of-type > div:nth-child(2) [class*="bg-orange"],
+.premium-v2 main > section:first-of-type > div:nth-child(2) [class*="bg-emerald"] {
+  color: #111827 !important;
+}
+
 .premium-v2 section {
   break-inside: avoid;
 }
