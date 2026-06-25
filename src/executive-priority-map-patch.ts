@@ -204,8 +204,8 @@ function addPriorityMapToPdf(doc: jsPDF) {
 
 function installPdfPatch() {
   const api = jsPDF.API as unknown as { save?: (...args: unknown[]) => unknown; __priorityMapPatch?: boolean };
-  if (api.__priorityMapPatch || typeof api.save !== "function") return;
-  const originalSave = api.save;
+  if (api.__priorityMapPatch) return;
+  const originalSave = new jsPDF().save as unknown as (...args: unknown[]) => unknown;
   api.__priorityMapPatch = true;
   api.save = function patchedSave(this: jsPDF, ...args: unknown[]) {
     try {
