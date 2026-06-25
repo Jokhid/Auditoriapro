@@ -30,7 +30,10 @@ function scaledHeaderCircle(args: unknown[]) {
 
 function shiftedHeaderText(args: unknown[]) {
   const [text, x, y, options] = args;
-  if (near(x, 42) && (near(y, 11) || near(y, 19) || near(y, 26))) return [text, 24, y, options];
+  if (!near(x, 42)) return args;
+  if (near(y, 11)) return [text, 24, 11, options];
+  if (near(y, 19)) return [text, 24, 19, options];
+  if (near(y, 26)) return [text, 196, 11, { ...(typeof options === 'object' && options ? options : {}), align: 'right' }];
   return args;
 }
 
