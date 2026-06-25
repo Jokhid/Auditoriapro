@@ -151,3 +151,5 @@ function installDomPatch() {
 }
 
 installDomPatch();
+
+export {};
