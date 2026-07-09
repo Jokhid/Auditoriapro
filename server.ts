@@ -8,6 +8,21 @@ dotenv.config();
 
 const app = express();
 const PORT = 3000;
+const AUDIT_MAIL_ACCOUNT = "josecarlos@hilolegal.es";
+
+const getAuditMailSender = () => {
+  const configuredUser = (process.env.AUDIT_MAIL_USER || AUDIT_MAIL_ACCOUNT).trim().toLowerCase();
+
+  if (configuredUser !== AUDIT_MAIL_ACCOUNT) {
+    throw new Error(`La cuenta de envío de la auditoría debe ser ${AUDIT_MAIL_ACCOUNT}.`);
+  }
+
+  return {
+    user: AUDIT_MAIL_ACCOUNT,
+    from: process.env.AUDIT_MAIL_FROM || `José Carlos Hidalgo <${AUDIT_MAIL_ACCOUNT}>`,
+    replyTo: process.env.AUDIT_MAIL_REPLY_TO || AUDIT_MAIL_ACCOUNT,
+  };
+};
 
 // Initialize GoogleGenAI client (gracefully checking GEMINI_API_KEY)
 const getAiClient = () => {
@@ -98,6 +113,16 @@ const getFallbackResponse = (clientData: any) => {
 };
 
 app.use(express.json());
+
+app.get("/api/audit-mail-sender", (_req, res) => {
+  try {
+    res.json(getAuditMailSender());
+  } catch (error) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Configuración de correo no válida.",
+    });
+  }
+});
 
 // API route: Perform high-quality AI analysis of financial & social security risks
 app.post("/api/audit", async (req, res) => {
