@@ -14,6 +14,9 @@ import './pdf-full-width-text-patch.ts';
 import './professional-audit-pdf-v3.ts';
 import './executive-priority-map-patch.ts';
 import './v2-header-footer-patch.ts';
+import { installUnicodeEmailCompatibility } from './unicode-email-compat';
+
+installUnicodeEmailCompatibility();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
